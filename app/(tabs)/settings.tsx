@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, Alert, Platform } from 'react-native
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
@@ -91,6 +92,21 @@ export default function SettingsScreen() {
             <Ionicons name="language" size={24} color={theme.primary} />
             <Text style={[styles.optionText, { color: theme.text }]}>
               {i18n.language === 'en' ? 'English' : 'Español'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
+        </Pressable>
+
+        <View style={[styles.separator, { backgroundColor: theme.border }]} />
+
+        <Pressable
+          style={styles.option}
+          onPress={() => router.push('/sync')}
+        >
+          <View style={styles.optionContent}>
+            <Ionicons name="cloud-outline" size={24} color={theme.primary} />
+            <Text style={[styles.optionText, { color: theme.text }]}>
+              {t('syncAccounts')}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />

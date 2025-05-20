@@ -1,8 +1,12 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
+import { useOxy } from '@oxyhq/services';
+import { useTranslation } from 'react-i18next';
 
 export default function TabLayout() {
+  const { t } = useTranslation();
+
   return (
     <Tabs
       screenOptions={{
@@ -32,6 +36,15 @@ export default function TabLayout() {
           title: 'Scan QR',
           tabBarIcon: ({ size, color }) => (
             <Ionicons name="qr-code-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="sync"
+        options={{
+          title: t('sync'),
+          tabBarIcon: ({ size, color }) => (
+            <Ionicons name="cloud-outline" size={size} color={color} />
           ),
         }}
       />

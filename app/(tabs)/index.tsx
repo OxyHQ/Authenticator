@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import OTPCode from '../../components/OTPCode';
 
@@ -17,9 +19,17 @@ export default function AccountsScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation();
 
+  // Load accounts on initial mount
   useEffect(() => {
     loadAccounts();
   }, []);
+
+  // Reload accounts each time the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadAccounts();
+    }, [])
+  );
 
   const loadAccounts = async () => {
     try {
@@ -37,7 +47,7 @@ export default function AccountsScreen() {
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <Text style={[styles.title, { color: theme.text }]}>{t('authenticator')}</Text>
       </View>
-      
+
       <ScrollView style={styles.scrollView}>
         {accounts.length === 0 ? (
           <View style={styles.emptyState}>

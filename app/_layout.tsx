@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Slot, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import '../i18n';
@@ -41,9 +41,7 @@ function AppLayout() {
         storageKeyPrefix="oxy_example" // Prefix for stored auth tokens
         theme="light"
       >
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="+not-found" />
-        </Stack>
+        <Slot />
         <StatusBar style={isDark ? 'light' : 'dark'} />
       </OxyProvider>
     </>
