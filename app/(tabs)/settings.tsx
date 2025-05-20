@@ -6,10 +6,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
+import { useOxy } from '@oxyhq/services';
 
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { t } = useTranslation();
+
+  const { user, showBottomSheet } = useOxy();
 
   const handleClearAccounts = async () => {
     Alert.alert(
@@ -43,6 +46,28 @@ export default function SettingsScreen() {
       </View>
 
       <View style={[styles.section, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+
+        <Pressable
+          style={styles.option}
+          onPress={() => showBottomSheet?.('SignIn')}
+        >
+          <View style={styles.optionContent}>
+            <Ionicons
+              name={user ? "person-circle-outline" : "log-in-outline"}
+              size={24}
+              color={theme.primary}
+            />
+            <Text style={[styles.optionText, { color: theme.text }]}>
+              {user?.username
+                ? user.username
+                : t('signIn')}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
+        </Pressable>
+
+        <View style={[styles.separator, { backgroundColor: theme.border }]} />
+
         <Pressable
           style={styles.option}
           onPress={toggleTheme}
