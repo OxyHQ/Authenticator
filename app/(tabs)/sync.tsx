@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Alert, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useOxy } from '@oxyhq/services';
+import SafeAreaHeader from '../../components/SafeAreaHeader';
 
 interface Account {
     secret: string;
@@ -24,24 +24,24 @@ export default function SyncScreen() {
 
     // Load local accounts and last sync time
     useEffect(() => {
-        const loadData = async () => {
-            try {
-                const storedAccounts = await AsyncStorage.getItem('accounts');
-                if (storedAccounts) {
-                    setAccounts(JSON.parse(storedAccounts));
-                }
-
-                const lastSyncTime = await AsyncStorage.getItem('lastSyncTime');
-                if (lastSyncTime) {
-                    setLastSynced(new Date(lastSyncTime));
-                }
-            } catch (error) {
-                console.error('Error loading data:', error);
-            }
-        };
-
         loadData();
     }, []);
+
+    const loadData = async () => {
+        try {
+            const storedAccounts = await AsyncStorage.getItem('accounts');
+            if (storedAccounts) {
+                setAccounts(JSON.parse(storedAccounts));
+            }
+
+            const lastSyncTime = await AsyncStorage.getItem('lastSyncTime');
+            if (lastSyncTime) {
+                setLastSynced(new Date(lastSyncTime));
+            }
+        } catch (error) {
+            console.error('Error loading data:', error);
+        }
+    };
 
     // Function to sync accounts to Oxy cloud
     const syncToCloud = async () => {
@@ -167,16 +167,12 @@ export default function SyncScreen() {
 
     const formatLastSynced = () => {
         if (!lastSynced) return t('neverSynced');
-
-        // Format the date for display
         return lastSynced.toLocaleString();
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-            <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-                <Text style={[styles.title, { color: theme.text }]}>{t('syncAccounts')}</Text>
-            </View>
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
+            <SafeAreaHeader title={t('syncAccounts')} />
 
             <View style={[styles.section, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                 {!user ? (
@@ -254,22 +250,13 @@ export default function SyncScreen() {
                     {t('syncInfo')}
                 </Text>
             </View>
-
-        </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    header: {
-        padding: 16,
-        borderBottomWidth: 1,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: '600',
     },
     section: {
         marginTop: 20,

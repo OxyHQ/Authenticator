@@ -1,18 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { useOxy } from '@oxyhq/services';
+import SafeAreaHeader from '../../components/SafeAreaHeader';
 
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { t } = useTranslation();
-
   const { user, showBottomSheet } = useOxy();
 
   const handleClearAccounts = async () => {
@@ -41,13 +40,10 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <Text style={[styles.title, { color: theme.text }]}>{t('settings')}</Text>
-      </View>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <SafeAreaHeader title={t('settings')} />
 
       <View style={[styles.section, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-
         <Pressable
           style={styles.option}
           onPress={() => showBottomSheet?.('SignIn')}
@@ -131,21 +127,13 @@ export default function SettingsScreen() {
       <View style={styles.footer}>
         <Text style={[styles.version, { color: theme.textSecondary }]}>{t('version')} 1.0.0</Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
   },
   section: {
     marginTop: 20,

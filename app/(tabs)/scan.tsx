@@ -5,16 +5,18 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+  const { theme } = useTheme();
 
   if (!permission) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.webMessage}>
-          <Text style={styles.text}>Requesting camera permission...</Text>
+          <Text style={[styles.text, { color: theme.text }]}>Requesting camera permission...</Text>
         </View>
       </SafeAreaView>
     );
@@ -22,15 +24,15 @@ export default function ScanScreen() {
 
   if (!permission.granted) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.webMessage}>
-          <Ionicons name="camera-off-outline" size={64} color="#dc3545" />
-          <Text style={styles.title}>Camera Access Required</Text>
-          <Text style={styles.text}>
+          <Ionicons name="camera-outline" size={64} color={theme.danger} />
+          <Text style={[styles.title, { color: theme.text }]}>Camera Access Required</Text>
+          <Text style={[styles.text, { color: theme.textSecondary }]}>
             Camera access is required to scan QR codes. Please enable camera access in your device settings.
           </Text>
           <Pressable
-            style={styles.button}
+            style={[styles.button, { backgroundColor: theme.primary }]}
             onPress={requestPermission}>
             <Text style={styles.buttonText}>Grant Permission</Text>
           </Pressable>
@@ -41,15 +43,15 @@ export default function ScanScreen() {
 
   if (Platform.OS === 'web') {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.webMessage}>
-          <Ionicons name="qr-code-outline" size={64} color="#1a73e8" />
-          <Text style={styles.title}>QR Code Scanner</Text>
-          <Text style={styles.text}>
+          <Ionicons name="qr-code-outline" size={64} color={theme.primary} />
+          <Text style={[styles.title, { color: theme.text }]}>QR Code Scanner</Text>
+          <Text style={[styles.text, { color: theme.textSecondary }]}>
             QR code scanning is not available on web platforms. Please use the mobile app.
           </Text>
           <Pressable
-            style={styles.button}
+            style={[styles.button, { backgroundColor: theme.primary }]}
             onPress={() => router.replace('/')}>
             <Text style={styles.buttonText}>Go Back</Text>
           </Pressable>
@@ -95,14 +97,14 @@ export default function ScanScreen() {
         style={StyleSheet.absoluteFillObject}
         onBarcodeScanned={handleBarCodeScanned}
       >
-        <View style={styles.overlay}>
-          <View style={styles.scanArea} />
-          <Text style={styles.scanText}>
+        <View style={[styles.overlay, { backgroundColor: theme.scanOverlay }]}>
+          <View style={[styles.scanArea, { borderColor: theme.scanBorder }]} />
+          <Text style={[styles.scanText, { color: theme.text }]}>
             Position the QR code within the frame
           </Text>
           {scanned && (
             <Pressable
-              style={styles.button}
+              style={[styles.button, { backgroundColor: theme.primary }]}
               onPress={() => setScanned(false)}>
               <Text style={styles.buttonText}>Tap to Scan Again</Text>
             </Pressable>
@@ -120,7 +122,6 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -131,18 +132,17 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   scanArea: {
-    width: 200,
-    height: 200,
+    width: 250,
+    height: 250,
     borderWidth: 2,
-    borderColor: '#fff',
     backgroundColor: 'transparent',
-    borderRadius: 35,
+    borderRadius: 20,
   },
   scanText: {
-    color: '#fff',
     marginTop: 20,
     fontSize: 16,
     textAlign: 'center',
+    paddingHorizontal: 32,
   },
   title: {
     fontSize: 24,
@@ -154,13 +154,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 24,
+    paddingHorizontal: 32,
   },
   button: {
-    backgroundColor: '#1a73e8',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
     marginTop: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   buttonText: {
     color: '#fff',

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
+import { Text } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
+import SafeAreaHeader from '../../components/SafeAreaHeader';
 import OTPCode from '../../components/OTPCode';
 
 interface Account {
@@ -43,12 +44,13 @@ export default function AccountsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <Text style={[styles.title, { color: theme.text }]}>{t('authenticator')}</Text>
-      </View>
-
-      <ScrollView style={styles.scrollView}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <SafeAreaHeader title={t('authenticator')} />
+      
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         {accounts.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={[styles.emptyStateText, { color: theme.textSecondary }]}>
@@ -66,7 +68,7 @@ export default function AccountsScreen() {
           ))
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -74,16 +76,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 16,
   },
   emptyState: {
     flex: 1,

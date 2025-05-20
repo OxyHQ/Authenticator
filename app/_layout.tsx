@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Slot, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import '../i18n';
 import { OxyServices, OxyProvider } from "@oxyhq/services";
@@ -12,7 +13,7 @@ declare global {
 }
 
 function AppLayout() {
-  const { isDark } = useTheme();
+  const { isDark, theme } = useTheme();
   // Initialize OxyServices
   const oxyServices = new OxyServices({
     baseURL: 'https://api.oxy.so',
@@ -41,8 +42,10 @@ function AppLayout() {
         storageKeyPrefix="oxy_example" // Prefix for stored auth tokens
         theme="light"
       >
-        <Slot />
-        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <SafeAreaProvider style={{ backgroundColor: theme.background }}>
+          <Slot />
+          <StatusBar style={isDark ? 'light' : 'dark'} />
+        </SafeAreaProvider>
       </OxyProvider>
     </>
   );
