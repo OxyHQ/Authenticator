@@ -28,7 +28,7 @@ interface AuthContextType {
   setupPIN: (pin: string) => Promise<boolean>;
   toggleSecurity: (enabled: boolean) => Promise<void>;
   toggleBiometrics: (enabled: boolean) => Promise<void>;
-  setLockTimeout: (minutes: number) => Promise<void>;
+  updateLockTimeout: (minutes: number) => Promise<void>;
   lock: () => void;
   resetRetryCount: () => void;
 }
@@ -190,7 +190,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   // Set the lock timeout duration
-  const setLockTimeout = async (minutes: number): Promise<void> => {
+  const updateLockTimeout = async (minutes: number): Promise<void> => {
     try {
       await SecureStore.setItemAsync(LOCK_TIMEOUT_KEY, minutes.toString());
       setLockTimeout(minutes);
@@ -229,7 +229,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setupPIN,
         toggleSecurity,
         toggleBiometrics,
-        setLockTimeout,
+        updateLockTimeout,
         lock,
         resetRetryCount,
       }}
