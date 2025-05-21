@@ -32,7 +32,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ visible }) => {
     if (visible && isBiometricsEnabled && isBiometricsAvailable && authState === 'unauthenticated') {
       handleBiometricAuth();
     }
-  }, [visible, isBiometricsEnabled, isBiometricsAvailable, authState, handleBiometricAuth]);
+  }, [visible, isBiometricsEnabled, isBiometricsAvailable, authState]);
 
   // Show biometric button if available but not auto-triggered
   useEffect(() => {

@@ -224,5 +224,3 @@ const styles = StyleSheet.create({
 });
 
 export default PINPad;
-
-export default PINPad;
