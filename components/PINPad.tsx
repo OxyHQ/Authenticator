@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  Vibration,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -94,16 +93,17 @@ const PINPad: React.FC<PINPadProps> = ({
       [
         showBiometricButton ? (
           <Pressable
+            key="biometric-button"
             style={styles.keypadButtonContainer}
             onPress={handleBiometricPress}
           >
             <Ionicons name="finger-print" size={28} color={theme.primary} />
           </Pressable>
         ) : (
-          <View />
+          <View key="empty-button" />
         ),
         '0',
-        <Pressable style={styles.keypadButtonContainer} onPress={handleDelete}>
+        <Pressable key="delete-button" style={styles.keypadButtonContainer} onPress={handleDelete}>
           <Ionicons name="backspace" size={24} color={theme.text} />
         </Pressable>,
       ],
@@ -130,7 +130,7 @@ const PINPad: React.FC<PINPadProps> = ({
                   </Pressable>
                 );
               } else {
-                return React.cloneElement(item, { key: `btn-${rowIndex}-${colIndex}` });
+                return item;
               }
             })}
           </View>
@@ -222,5 +222,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+
+export default PINPad;
 
 export default PINPad;

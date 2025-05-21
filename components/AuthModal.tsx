@@ -32,7 +32,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ visible }) => {
     if (visible && isBiometricsEnabled && isBiometricsAvailable && authState === 'unauthenticated') {
       handleBiometricAuth();
     }
-  }, [visible, isBiometricsEnabled, isBiometricsAvailable, authState]);
+  }, [visible, isBiometricsEnabled, isBiometricsAvailable, authState, handleBiometricAuth]);
 
   // Show biometric button if available but not auto-triggered
   useEffect(() => {
@@ -53,15 +53,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ visible }) => {
     if (!success) {
       setError(t('incorrectPin'));
     }
-  };
-
-  const getBiometricIcon = () => {
-    if (biometricType === 'FACE') {
-      return 'scan-face-outline';
-    } else if (biometricType === 'FINGERPRINT') {
-      return 'finger-print-outline';
-    }
-    return 'shield-checkmark-outline';
   };
 
   // Show nothing if already authenticated or if security is not enabled
