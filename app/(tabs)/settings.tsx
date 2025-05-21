@@ -97,6 +97,21 @@ export default function SettingsScreen() {
 
         <Pressable
           style={styles.option}
+          onPress={() => router.push('/security')}
+        >
+          <View style={styles.optionContent}>
+            <Ionicons name="shield-outline" size={24} color={theme.primary} />
+            <Text style={[styles.optionText, { color: theme.text }]}>
+              {t('appLock')}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
+        </Pressable>
+
+        <View style={[styles.separator, { backgroundColor: theme.border }]} />
+
+        <Pressable
+          style={styles.option}
           onPress={() => router.push('/sync')}
         >
           <View style={styles.optionContent}>
