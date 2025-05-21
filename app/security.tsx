@@ -35,7 +35,7 @@ export default function SecurityScreen() {
     lockTimeout,
     toggleSecurity,
     toggleBiometrics,
-    setLockTimeout,
+    updateLockTimeout,
     setupPIN,
     hasSetupPIN,
   } = useAuth();
@@ -92,7 +92,7 @@ export default function SecurityScreen() {
 
   // Handle timeout selection
   const handleTimeoutSelect = async (minutes: number) => {
-    await setLockTimeout(minutes);
+    await updateLockTimeout(minutes);
   };
 
   // Render the PIN setup flow
