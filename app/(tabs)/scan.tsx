@@ -92,7 +92,7 @@ export default function ScanScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <CameraView
         style={StyleSheet.absoluteFillObject}
         onBarcodeScanned={handleBarCodeScanned}
@@ -118,7 +118,6 @@ export default function ScanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
   },
   overlay: {
     flex: 1,

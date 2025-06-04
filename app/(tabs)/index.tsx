@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { router } from 'expo-router';
 import SafeAreaHeader from '../../components/SafeAreaHeader';
 import OTPCode from '../../components/OTPCode';
 
@@ -53,9 +54,15 @@ export default function AccountsScreen() {
       >
         {accounts.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={[styles.emptyStateText, { color: theme.textSecondary }]}>
+            <Text style={[styles.emptyStateText, { color: theme.textSecondary }]}> 
               {t('noAccounts')}
             </Text>
+            <Pressable
+              style={[styles.addButton, { backgroundColor: theme.primary }]}
+              onPress={() => router.push('/scan')}
+            >
+              <Text style={styles.addButtonText}>{t('addAccount')}</Text>
+            </Pressable>
           </View>
         ) : (
           accounts.map((account, index) => (
@@ -93,5 +100,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  addButton: {
+    marginTop: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

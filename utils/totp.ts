@@ -115,7 +115,16 @@ function pad(data: Uint8Array): Uint8Array {
   padded[data.length] = 0x80;
   
   const view = new DataView(padded.buffer);
-  view.setBigUint64(paddedLength - 8, BigInt(l), false);
+  if (typeof (view as any).setBigUint64 === 'function') {
+    (view as any).setBigUint64(paddedLength - 8, BigInt(l), false);
+  } else {
+    // Fallback for environments without DataView.setBigUint64
+    const bigL = BigInt(l);
+    const high = Number((bigL >> 32n) & 0xffffffffn);
+    const low = Number(bigL & 0xffffffffn);
+    view.setUint32(paddedLength - 8, high, false);
+    view.setUint32(paddedLength - 4, low, false);
+  }
   
   return padded;
 }
