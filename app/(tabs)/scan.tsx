@@ -159,7 +159,7 @@ export default function ScanScreen() {
                   style={[styles.scanAgainButton, { backgroundColor: theme.primary }]}
                   onPress={() => setScanned(false)}>
                   <Ionicons name="refresh" size={20} color="#fff" style={styles.buttonIcon} />
-                  <Text style={styles.buttonText}>Scan Again</Text>
+                  <Text style={[styles.buttonText, { color: '#fff' }]}>Scan Again</Text>
                 </Pressable>
               )}
             </View>
