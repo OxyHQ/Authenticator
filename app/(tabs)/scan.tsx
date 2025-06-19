@@ -66,7 +66,7 @@ export default function ScanScreen() {
           <Pressable
             style={[styles.button, { backgroundColor: theme.primary }]}
             onPress={requestPermission}>
-            <Text style={styles.buttonText}>Grant Permission</Text>
+            <Text style={[styles.buttonText, { color: '#fff' }]}>Grant Permission</Text>
           </Pressable>
         </View>
       </SafeAreaView>
