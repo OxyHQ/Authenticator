@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View, Platform, Pressable } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
@@ -11,8 +11,34 @@ export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const { theme } = useTheme();
+  const html5QrcodeRef = useRef<any>(null);
 
-  if (!permission) {
+  useEffect(() => {
+    if (Platform.OS !== 'web' || scanned) return;
+
+    let isCancelled = false;
+    import('html5-qrcode').then(({ Html5Qrcode }) => {
+      if (isCancelled) return;
+      html5QrcodeRef.current = new Html5Qrcode('html5qr-code');
+      html5QrcodeRef.current
+        .start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: 250 },
+          (text: string) => handleBarCodeScanned({ data: text })
+        )
+        .catch((err: any) => console.error('QR start error', err));
+    });
+
+    return () => {
+      isCancelled = true;
+      if (html5QrcodeRef.current) {
+        html5QrcodeRef.current.stop().catch(() => {});
+        html5QrcodeRef.current.clear().catch(() => {});
+      }
+    };
+  }, [scanned]);
+
+  if (Platform.OS !== 'web' && !permission) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.webMessage}>
@@ -22,7 +48,7 @@ export default function ScanScreen() {
     );
   }
 
-  if (!permission.granted) {
+  if (Platform.OS !== 'web' && permission && !permission.granted) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.webMessage}>
@@ -44,23 +70,21 @@ export default function ScanScreen() {
   if (Platform.OS === 'web') {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={styles.webMessage}>
-          <Ionicons name="qr-code-outline" size={64} color={theme.primary} />
-          <Text style={[styles.title, { color: theme.text }]}>QR Code Scanner</Text>
-          <Text style={[styles.text, { color: theme.textSecondary }]}>
-            QR code scanning is not available on web platforms. Please use the mobile app.
-          </Text>
-          <Pressable
-            style={[styles.button, { backgroundColor: theme.primary }]}
-            onPress={() => router.replace('/')}>
-            <Text style={styles.buttonText}>Go Back</Text>
-          </Pressable>
+        <View style={styles.webScanner}>
+          <View id="html5qr-code" style={{ width: 250, height: 250 }} />
+          {scanned && (
+            <Pressable
+              style={[styles.button, { backgroundColor: theme.primary }]}
+              onPress={() => setScanned(false)}>
+              <Text style={styles.buttonText}>Scan Again</Text>
+            </Pressable>
+          )}
         </View>
       </SafeAreaView>
     );
   }
 
-  const handleBarCodeScanned = async ({ data }: { data: string }) => {
+  async function handleBarCodeScanned({ data }: { data: string }) {
     if (scanned) return;
     setScanned(true);
     try {
@@ -89,28 +113,30 @@ export default function ScanScreen() {
       console.error('Error processing QR code:', error);
       setScanned(false);
     }
-  };
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <CameraView
-        style={StyleSheet.absoluteFillObject}
-        onBarcodeScanned={handleBarCodeScanned}
-      >
-        <View style={[styles.overlay, { backgroundColor: theme.scanOverlay }]}>
-          <View style={[styles.scanArea, { borderColor: theme.scanBorder }]} />
-          <Text style={[styles.scanText, { color: theme.text }]}>
-            Position the QR code within the frame
-          </Text>
-          {scanned && (
-            <Pressable
-              style={[styles.button, { backgroundColor: theme.primary }]}
-              onPress={() => setScanned(false)}>
-              <Text style={styles.buttonText}>Tap to Scan Again</Text>
-            </Pressable>
-          )}
-        </View>
-      </CameraView>
+      {Platform.OS !== 'web' && (
+        <CameraView
+          style={StyleSheet.absoluteFillObject}
+          onBarcodeScanned={handleBarCodeScanned}
+        >
+          <View style={[styles.overlay, { backgroundColor: theme.scanOverlay }]}>
+            <View style={[styles.scanArea, { borderColor: theme.scanBorder }]} />
+            <Text style={[styles.scanText, { color: theme.text }]}>
+              Position the QR code within the frame
+            </Text>
+            {scanned && (
+              <Pressable
+                style={[styles.button, { backgroundColor: theme.primary }]}
+                onPress={() => setScanned(false)}>
+                <Text style={styles.buttonText}>Tap to Scan Again</Text>
+              </Pressable>
+            )}
+          </View>
+        </CameraView>
+      )}
     </View>
   );
 }
@@ -125,6 +151,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   webMessage: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  webScanner: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
