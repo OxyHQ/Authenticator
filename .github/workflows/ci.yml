@@ -69,6 +69,17 @@ jobs:
       - name: Build web bundle
         run: bun run export:web
 
+      # The native bundle is a genuinely different code path, not a duplicate of
+      # the web one: react-native-css compiles global.css through lightningcss
+      # for native instead of the PostCSS pipeline the web build uses, and the
+      # result is compiled to Hermes bytecode. A tree that exports a perfectly
+      # good web bundle can fail to bundle for a device at all, which is exactly
+      # what happened here before `overrides.lightningcss` was pinned. Metro
+      # needs no Android or Xcode toolchain to produce this, so it costs a
+      # minute and covers a failure the web build cannot see.
+      - name: Build native bundle
+        run: bun run export:native
+
       # A silently inert Tailwind pipeline is the failure this repository is
       # most exposed to: react-native-css emits real CSS classes on web rather
       # than runtime styles, so without a compiled utility stylesheet every

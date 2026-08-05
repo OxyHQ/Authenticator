@@ -59,9 +59,13 @@ A secure, open-source Two-Factor Authentication (2FA) app built with React Nativ
    bun run lint        # expo lint
    bun run test        # TOTP generator against the RFC 6238 vectors
    bun run export:web  # production web bundle -> dist/
+   bun run export:native  # Metro + Hermes bundle -> dist-native/
    ```
 
-   All four run in CI on every pull request.
+   All five run in CI on every pull request. `export:native` is not a duplicate
+   of `export:web`: the native bundle compiles `global.css` through a different
+   CSS pipeline and then through Hermes, so it catches failures the web build
+   cannot see. It needs no Android or Xcode toolchain.
 
 2. **Environment Setup**
    - The app uses Expo's development build system
