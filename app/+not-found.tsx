@@ -1,36 +1,16 @@
-import { Link, Stack } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
-import { useTheme } from '../contexts/ThemeContext';
+import { Button } from '@oxyhq/bloom/button';
+import { H2 } from '@oxyhq/bloom/typography';
+import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 
 export default function NotFoundScreen() {
-  const { theme } = useTheme();
+  const { t } = useTranslation();
+
   return (
-    <>
-      <Stack.Screen options={{ title: 'Oops!' }} />
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <Text style={[styles.text, { color: theme.text }]}>This screen doesn&apos;t exist.</Text>
-        <Link href="/" style={styles.link}>
-          <Text style={{ color: theme.primary }}>Go to home screen!</Text>
-        </Link>
-      </View>
-    </>
+    <View className="flex-1 items-center justify-center gap-4 bg-background p-5">
+      <H2 className="text-center text-foreground">{t('notFoundTitle')}</H2>
+      <Button onPress={() => router.replace('/')}>{t('notFoundAction')}</Button>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  text: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-});

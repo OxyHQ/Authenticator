@@ -1,17 +1,27 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { StyleSheet, Text, View, Pressable, Animated } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Button } from '@oxyhq/bloom/button';
+import * as Icons from '@oxyhq/bloom/icons';
+import { useBloomTheme } from '@oxyhq/bloom/theme';
+import { H3, P } from '@oxyhq/bloom/typography';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useTheme } from '../../contexts/ThemeContext';
+import { router } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Animated, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+/** Vertical travel of the scan line, in dp, measured from the frame centre. */
+const SCAN_LINE_TRAVEL = 120;
+
+/** Duration of one leg of the scan-line sweep, in ms. */
+const SCAN_LINE_DURATION = 2000;
 
 export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-  const { theme } = useTheme();
-  
+  const { theme } = useBloomTheme();
+  const { t } = useTranslation();
+
   const scanLineAnimation = useMemo(() => new Animated.Value(0), []);
 
   useEffect(() => {
@@ -19,16 +29,16 @@ export default function ScanScreen() {
       Animated.sequence([
         Animated.timing(scanLineAnimation, {
           toValue: 1,
-          duration: 2000,
+          duration: SCAN_LINE_DURATION,
           useNativeDriver: true,
         }),
         Animated.timing(scanLineAnimation, {
           toValue: 0,
-          duration: 2000,
+          duration: SCAN_LINE_DURATION,
           useNativeDriver: true,
         }),
-      ]).start(() => {
-        if (!scanned) {
+      ]).start(({ finished }) => {
+        if (finished && !scanned) {
           animateScanLine();
         }
       });
@@ -37,42 +47,19 @@ export default function ScanScreen() {
     if (!scanned) {
       animateScanLine();
     }
+
+    return () => {
+      scanLineAnimation.stopAnimation();
+    };
   }, [scanned, scanLineAnimation]);
 
   const scanLineTranslateY = scanLineAnimation.interpolate({
     inputRange: [0, 1],
-    outputRange: [-120, 120],
+    outputRange: [-SCAN_LINE_TRAVEL, SCAN_LINE_TRAVEL],
   });
 
-  if (!permission) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={styles.overlay}>
-          <Text style={[styles.text, { color: theme.text }]}>Requesting camera permission...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (permission && !permission.granted) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={styles.overlay}>
-          <Ionicons name="camera-outline" size={64} color={theme.danger} />
-          <Text style={[styles.title, { color: theme.text }]}>Camera Access Required</Text>
-          <Text style={[styles.text, { color: theme.textSecondary }]}>
-            Camera access is required to scan QR codes. Please enable camera access in your device settings.
-          </Text>
-          <Pressable
-            style={[styles.button, { backgroundColor: theme.primary }]}
-            onPress={requestPermission}>
-            <Text style={[styles.buttonText, { color: '#fff' }]}>Grant Permission</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
+  // otpauth:// parsing and the shape written to storage are deliberately
+  // unchanged from the pre-upgrade implementation.
   async function handleBarCodeScanned({ data }: { data: string }) {
     if (scanned) return;
     setScanned(true);
@@ -82,7 +69,7 @@ export default function ScanScreen() {
         setScanned(false);
         return;
       }
-      
+
       const params = new URLSearchParams(url.search);
       const secret = params.get('secret');
       const issuer = params.get('issuer') || url.hostname;
@@ -104,63 +91,97 @@ export default function ScanScreen() {
     }
   }
 
+  if (!permission) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <View className="flex-1 items-center justify-center p-8">
+          <P className="text-center text-foreground">{t('cameraRequesting')}</P>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!permission.granted) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <View className="flex-1 items-center justify-center gap-4 p-8">
+          <Icons.Camera_Stroke2_Corner0_Rounded size="3xl" fill={theme.colors.negative} />
+          <H3 className="text-center text-foreground">{t('cameraRequiredTitle')}</H3>
+          <P className="text-center text-muted-foreground">{t('cameraRequiredMessage')}</P>
+          <Button onPress={requestPermission}>{t('cameraGrant')}</Button>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View className="flex-1 bg-background">
       <CameraView
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         onBarcodeScanned={handleBarCodeScanned}
         barcodeScannerSettings={{
-          barcodeTypes: ["qr"],
+          barcodeTypes: ['qr'],
         }}
       >
-        <View style={styles.overlay}>
+        <View className="flex-1">
           {/* Top overlay */}
-          <View style={[styles.overlaySection, { backgroundColor: 'rgba(0,0,0,0.6)' }]} />
-          
+          <View className="flex-1 bg-black/60" />
+
           {/* Middle section with scan area */}
-          <View style={styles.scanContainer}>
-            <View style={[styles.overlaySection, { backgroundColor: 'rgba(0,0,0,0.6)' }]} />
-            
-            <View style={styles.scanFrame}>
+          <View className="h-[280px] flex-row">
+            <View className="flex-1 bg-black/60" />
+
+            <View className="relative h-[280px] w-[280px] items-center justify-center">
               {/* Corner indicators */}
-              <View style={[styles.corner, styles.topLeft, { borderColor: theme.primary }]} />
-              <View style={[styles.corner, styles.topRight, { borderColor: theme.primary }]} />
-              <View style={[styles.corner, styles.bottomLeft, { borderColor: theme.primary }]} />
-              <View style={[styles.corner, styles.bottomRight, { borderColor: theme.primary }]} />
-              
+              <View
+                className="absolute left-0 top-0 h-[30px] w-[30px] rounded-tl-lg border-4 border-b-0 border-r-0"
+                style={{ borderColor: theme.colors.primary }}
+              />
+              <View
+                className="absolute right-0 top-0 h-[30px] w-[30px] rounded-tr-lg border-4 border-b-0 border-l-0"
+                style={{ borderColor: theme.colors.primary }}
+              />
+              <View
+                className="absolute bottom-0 left-0 h-[30px] w-[30px] rounded-bl-lg border-4 border-r-0 border-t-0"
+                style={{ borderColor: theme.colors.primary }}
+              />
+              <View
+                className="absolute bottom-0 right-0 h-[30px] w-[30px] rounded-br-lg border-4 border-l-0 border-t-0"
+                style={{ borderColor: theme.colors.primary }}
+              />
+
               {/* Animated scan line */}
-              <Animated.View 
-                style={[
-                  styles.scanLine, 
-                  { 
-                    backgroundColor: theme.primary,
-                    transform: [{ translateY: scanLineTranslateY }] 
-                  }
-                ]} 
+              <Animated.View
+                className="absolute h-0.5 w-[90%] rounded-sm"
+                style={{
+                  backgroundColor: theme.colors.primary,
+                  transform: [{ translateY: scanLineTranslateY }],
+                }}
               />
             </View>
-            
-            <View style={[styles.overlaySection, { backgroundColor: 'rgba(0,0,0,0.6)' }]} />
+
+            <View className="flex-1 bg-black/60" />
           </View>
-          
+
           {/* Bottom overlay with instructions */}
-          <View style={[styles.overlaySection, styles.bottomSection, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
-            <View style={styles.instructionsContainer}>
-              <Ionicons name="qr-code-outline" size={32} color={theme.primary} />
-              <Text style={[styles.instructionTitle, { color: theme.text }]}>
-                Scan QR Code
-              </Text>
-              <Text style={[styles.instructionText, { color: theme.textSecondary }]}>
-                Position the QR code within the frame to add it to your authenticator
-              </Text>
-              
+          <View className="flex-1 justify-end bg-black/60 pb-[60px]">
+            <View className="mx-5 items-center gap-3 rounded-2xl bg-white/10 px-8 py-6">
+              <Icons.QrCode_Stroke2_Corner0_Rounded size="2xl" fill={theme.colors.primary} />
+              <H3 className="text-center text-foreground">{t('scanTitle')}</H3>
+              <P className="text-center text-muted-foreground">{t('scanInstructions')}</P>
+
               {scanned && (
-                <Pressable
-                  style={[styles.scanAgainButton, { backgroundColor: theme.primary }]}
-                  onPress={() => setScanned(false)}>
-                  <Ionicons name="refresh" size={20} color="#fff" style={styles.buttonIcon} />
-                  <Text style={[styles.buttonText, { color: '#fff' }]}>Scan Again</Text>
-                </Pressable>
+                <Button
+                  onPress={() => setScanned(false)}
+                  icon={
+                    <Icons.ArrowRotateClockwise_Stroke2_Corner0_Rounded
+                      size="sm"
+                      fill={theme.colors.primaryForeground}
+                    />
+                  }
+                >
+                  {t('scanAgain')}
+                </Button>
               )}
             </View>
           </View>
@@ -169,150 +190,3 @@ export default function ScanScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  overlay: {
-    flex: 1,
-  },
-  overlaySection: {
-    flex: 1,
-  },
-  scanContainer: {
-    flexDirection: 'row',
-    height: 280,
-  },
-  scanFrame: {
-    width: 280,
-    height: 280,
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  corner: {
-    position: 'absolute',
-    width: 30,
-    height: 30,
-    borderWidth: 4,
-  },
-  topLeft: {
-    top: 0,
-    left: 0,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 8,
-  },
-  topRight: {
-    top: 0,
-    right: 0,
-    borderLeftWidth: 0,
-    borderBottomWidth: 0,
-    borderTopRightRadius: 8,
-  },
-  bottomLeft: {
-    bottom: 0,
-    left: 0,
-    borderRightWidth: 0,
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 8,
-  },
-  bottomRight: {
-    bottom: 0,
-    right: 0,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    borderBottomRightRadius: 8,
-  },
-  scanLine: {
-    position: 'absolute',
-    width: '90%',
-    height: 2,
-    borderRadius: 1,
-  },
-  bottomSection: {
-    justifyContent: 'flex-end',
-    paddingBottom: 60,
-  },
-  instructionsContainer: {
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 24,
-    marginHorizontal: 20,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(10px)',
-  },
-  instructionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 12,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  instructionText: {
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 16,
-  },
-  scanAgainButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginTop: 8,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  buttonIcon: {
-    marginRight: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // Permission request styles
-  scanArea: {
-    width: 250,
-    height: 250,
-    borderWidth: 2,
-    backgroundColor: 'transparent',
-    borderRadius: 20,
-  },
-  scanText: {
-    marginTop: 20,
-    fontSize: 16,
-    textAlign: 'center',
-    paddingHorizontal: 32,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginVertical: 16,
-    textAlign: 'center',
-  },
-  text: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 32,
-  },
-  button: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 20,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-});

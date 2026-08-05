@@ -1,37 +1,45 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useTranslation } from 'react-i18next';
-import i18n from '../../i18n';
+import { alert } from '@oxyhq/bloom/dialog';
+import * as Icons from '@oxyhq/bloom/icons';
+import {
+  SettingsListDivider,
+  SettingsListGroup,
+  SettingsListItem,
+} from '@oxyhq/bloom/settings-list';
+import { Switch } from '@oxyhq/bloom/switch';
+import { useBloomTheme } from '@oxyhq/bloom/theme';
+import { P } from '@oxyhq/bloom/typography';
 import { useOxy } from '@oxyhq/services';
+import Constants from 'expo-constants';
+import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
+
 import SafeAreaHeader from '../../components/SafeAreaHeader';
+import i18n from '../../i18n';
 
 export default function SettingsScreen() {
-  const { theme, isDark, toggleTheme } = useTheme();
+  const { theme, setMode } = useBloomTheme();
   const { t } = useTranslation();
-  const { user, showBottomSheet } = useOxy();
+  const { user, openAccountDialog } = useOxy();
 
-  const handleClearAccounts = async () => {
-    Alert.alert(
-      t('clearConfirmTitle'),
-      t('clearConfirmMessage'),
-      [
-        {
-          text: t('cancel'),
-          style: 'cancel',
+  const handleClearAccounts = () => {
+    alert(t('clearConfirmTitle'), t('clearConfirmMessage'), [
+      { text: t('cancel'), style: 'cancel' },
+      {
+        text: t('clear'),
+        style: 'destructive',
+        onPress: () => {
+          AsyncStorage.removeItem('accounts').catch((error: unknown) => {
+            console.error('Error clearing accounts:', error);
+          });
         },
-        {
-          text: t('clear'),
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.removeItem('accounts');
-          },
-        },
-      ]
-    );
+      },
+    ]);
+  };
+
+  const toggleDarkMode = () => {
+    setMode(theme.isDark ? 'light' : 'dark');
   };
 
   const toggleLanguage = () => {
@@ -40,129 +48,72 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View className="flex-1 bg-background">
       <SafeAreaHeader title={t('settings')} />
 
-      <View style={[styles.section, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <Pressable
-          style={styles.option}
-          onPress={() => showBottomSheet?.('SignIn')}
-        >
-          <View style={styles.optionContent}>
-            <Ionicons
-              name={user ? "person-circle-outline" : "log-in-outline"}
-              size={24}
-              color={theme.primary}
-            />
-            <Text style={[styles.optionText, { color: theme.text }]}>
-              {user?.username
-                ? user.username
-                : t('signIn')}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
-        </Pressable>
+      <SettingsListGroup>
+        <SettingsListItem
+          icon={
+            user ? (
+              <Icons.UserCircle_Stroke2_Corner0_Rounded size="lg" fill={theme.colors.primary} />
+            ) : (
+              <Icons.ArrowBoxLeft_Stroke2_Corner0_Rounded size="lg" fill={theme.colors.primary} />
+            )
+          }
+          title={user?.username ?? t('signIn')}
+          onPress={() => openAccountDialog()}
+        />
 
-        <View style={[styles.separator, { backgroundColor: theme.border }]} />
+        <SettingsListDivider />
 
-        <Pressable
-          style={styles.option}
-          onPress={toggleTheme}
-        >
-          <View style={styles.optionContent}>
-            <Ionicons name={isDark ? "moon" : "sunny"} size={24} color={theme.primary} />
-            <Text style={[styles.optionText, { color: theme.text }]}>
-              {isDark ? 'Dark Mode' : 'Light Mode'}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
-        </Pressable>
+        <SettingsListItem
+          icon={<Icons.Moon_Stroke2_Corner0_Rounded size="lg" fill={theme.colors.primary} />}
+          title={t('darkMode')}
+          // The whole row toggles, not just the switch. Tapping the label is
+          // how the pre-Bloom version worked and how a settings row is expected
+          // to behave.
+          onPress={toggleDarkMode}
+          rightElement={<Switch value={theme.isDark} onValueChange={toggleDarkMode} />}
+          showChevron={false}
+        />
 
-        <View style={[styles.separator, { backgroundColor: theme.border }]} />
+        <SettingsListDivider />
 
-        <Pressable
-          style={styles.option}
+        <SettingsListItem
+          icon={<Icons.Globe_Stroke2_Corner0_Rounded size="lg" fill={theme.colors.primary} />}
+          title={t('language')}
+          value={i18n.language === 'en' ? 'English' : 'Español'}
           onPress={toggleLanguage}
-        >
-          <View style={styles.optionContent}>
-            <Ionicons name="language" size={24} color={theme.primary} />
-            <Text style={[styles.optionText, { color: theme.text }]}>
-              {i18n.language === 'en' ? 'English' : 'Español'}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
-        </Pressable>
+        />
 
-        <View style={[styles.separator, { backgroundColor: theme.border }]} />
+        <SettingsListDivider />
 
-        <Pressable
-          style={styles.option}
+        <SettingsListItem
+          icon={
+            <Icons.ArrowRotateClockwise_Stroke2_Corner0_Rounded
+              size="lg"
+              fill={theme.colors.primary}
+            />
+          }
+          title={t('syncAccounts')}
           onPress={() => router.push('/sync')}
-        >
-          <View style={styles.optionContent}>
-            <Ionicons name="cloud-outline" size={24} color={theme.primary} />
-            <Text style={[styles.optionText, { color: theme.text }]}>
-              {t('syncAccounts')}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
-        </Pressable>
+        />
 
-        <View style={[styles.separator, { backgroundColor: theme.border }]} />
+        <SettingsListDivider />
 
-        <Pressable
-          style={styles.option}
+        <SettingsListItem
+          icon={<Icons.Trash_Stroke2_Corner0_Rounded size="lg" fill={theme.colors.negative} />}
+          title={t('clearAllAccounts')}
+          destructive
           onPress={handleClearAccounts}
-        >
-          <View style={styles.optionContent}>
-            <Ionicons name="trash-outline" size={24} color={theme.danger} />
-            <Text style={[styles.optionText, { color: theme.danger }]}>
-              {t('clearAllAccounts')}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
-        </Pressable>
-      </View>
+        />
+      </SettingsListGroup>
 
-      <View style={styles.footer}>
-        <Text style={[styles.version, { color: theme.textSecondary }]}>{t('version')} 1.0.0</Text>
+      <View className="items-center p-4">
+        <P className="text-sm text-muted-foreground">
+          {t('version')} {Constants.expoConfig?.version ?? ''}
+        </P>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  section: {
-    marginTop: 20,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  optionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  optionText: {
-    fontSize: 16,
-    marginLeft: 12,
-  },
-  separator: {
-    height: 1,
-    marginLeft: 16,
-  },
-  footer: {
-    padding: 16,
-    alignItems: 'center',
-  },
-  version: {
-    fontSize: 14,
-  },
-});

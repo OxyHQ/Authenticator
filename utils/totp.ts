@@ -1,6 +1,9 @@
 import { Buffer } from 'buffer';
 
-function hmacSha1(key: string, message: string): ArrayBuffer {
+// Return type is `ArrayBufferLike` rather than `ArrayBuffer` because
+// `Uint8Array#buffer` is typed as `ArrayBufferLike` from TypeScript 5.7 onward.
+// Annotation only: the value returned and every byte it carries are unchanged.
+function hmacSha1(key: string, message: string): ArrayBufferLike {
   const keyData = base32ToBuffer(key);
   const messageData = Buffer.from(message, 'binary');
   

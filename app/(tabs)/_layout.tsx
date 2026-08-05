@@ -1,62 +1,61 @@
+import * as Icons from '@oxyhq/bloom/icons';
+import { useBloomTheme } from '@oxyhq/bloom/theme';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../contexts/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const TAB_BAR_CONTENT_HEIGHT = 50;
 
 export default function TabLayout() {
   const { t } = useTranslation();
-  const { theme } = useTheme();
+  const { theme } = useBloomTheme();
   const insets = useSafeAreaInsets();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        // The navigator's own bar is not className-aware, so its chrome is
+        // driven from resolved Bloom tokens rather than utility classes.
         tabBarStyle: {
-          backgroundColor: theme.tabBar,
+          backgroundColor: theme.colors.card,
           borderTopWidth: 1,
-          borderTopColor: theme.tabBarBorder,
-          height: 50 + insets.bottom,
+          borderTopColor: theme.colors.border,
+          height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
           paddingBottom: insets.bottom,
         },
-        tabBarActiveTintColor: theme.tabBarActive,
-        tabBarInactiveTintColor: theme.tabBarInactive,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Accounts',
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="key-outline" size={size} color={color} />
-          ),
+          title: t('accounts'),
+          tabBarIcon: ({ color }) => <Icons.Key_Stroke2_Corner2_Rounded size="lg" fill={color} />,
         }}
       />
       <Tabs.Screen
         name="scan"
         options={{
-          title: 'Scan QR',
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="qr-code-outline" size={size} color={color} />
-          ),
+          title: t('scanQr'),
+          tabBarIcon: ({ color }) => <Icons.QrCode_Stroke2_Corner0_Rounded size="lg" fill={color} />,
         }}
       />
       <Tabs.Screen
         name="sync"
         options={{
           title: t('sync'),
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="cloud-outline" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Icons.ArrowRotateClockwise_Stroke2_Corner0_Rounded size="lg" fill={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
+          title: t('settings'),
+          tabBarIcon: ({ color }) => (
+            <Icons.SettingsGear2_Stroke2_Corner0_Rounded size="lg" fill={color} />
           ),
         }}
       />

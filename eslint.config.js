@@ -1,10 +1,4 @@
-// https://docs.expo.dev/guides/using-eslint/
-const { defineConfig } = require('eslint/config');
-const expoConfig = require("eslint-config-expo/flat");
+// Shared Oxy ESLint flat config. See @oxyhq/app-preset/eslint.
+const oxyConfig = require('@oxyhq/app-preset/eslint');
 
-module.exports = defineConfig([
-  expoConfig,
-  {
-    ignores: ["dist/*"],
-  }
-]);
+module.exports = [...oxyConfig];
