@@ -1,8 +1,8 @@
 {
-  "buildCommand": "npm install @oxyhq/services@latest && expo export -p web",
+  "buildCommand": "bun run export:web",
   "outputDirectory": "dist",
   "framework": null,
-  "installCommand": "npm install",
+  "installCommand": "bun install --frozen-lockfile",
   "rewrites": [
     {
       "source": "/(.*)",

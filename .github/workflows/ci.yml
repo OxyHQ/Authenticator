@@ -1,0 +1,131 @@
+# CI: the workflow that runs on a pull request and on main.
+#
+# Until this existed the only workflows in this repository were Dependabot and
+# CodeQL, so nothing ever installed the dependency graph, type checked it, or
+# built it. A pull request could break the app completely and every check would
+# still be green.
+#
+# The build step is not decoration. `tsc` passing says the types line up; it
+# says nothing about whether Metro can resolve the graph, whether the Tailwind
+# pipeline emits the utility stylesheet the web build needs, or whether the
+# app bundles at all. `expo export` is the cheapest check that answers those.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A superseded pull request run proves nothing about the commit that replaced
+# it. On main it is the other way round, because a cancelled run is a check
+# that never reported, so only pull requests cancel.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  BUN_VERSION: '1.3.14'
+  NODE_VERSION: '22.17.0'
+
+jobs:
+  quality:
+    name: Typecheck, lint, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      # The Expo CLI runs on Node, so the version it runs on is pinned rather
+      # than inherited from whatever the runner image ships this month.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # This job wants the exact graph the lockfile records. It is NOT a
+      # lockfile sync check and must not be mistaken for one. That is the
+      # `lockfile` job below, which needs a plain install and so cannot share
+      # this step.
+      - name: Install exact dependency graph
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Lint
+        run: bun run lint
+
+      # The TOTP generator is the whole point of this app, and its suite pins it
+      # against the RFC 6238 vectors rather than against itself.
+      - name: Test
+        run: bun run test
+
+      - name: Build web bundle
+        run: bun run export:web
+
+      # The native bundle is a genuinely different code path, not a duplicate of
+      # the web one: react-native-css compiles global.css through lightningcss
+      # for native instead of the PostCSS pipeline the web build uses, and the
+      # result is compiled to Hermes bytecode. A tree that exports a perfectly
+      # good web bundle can fail to bundle for a device at all, which is exactly
+      # what happened here before `overrides.lightningcss` was pinned. Metro
+      # needs no Android or Xcode toolchain to produce this, so it costs a
+      # minute and covers a failure the web build cannot see.
+      - name: Build native bundle
+        run: bun run export:native
+
+      # A silently inert Tailwind pipeline is the failure this repository is
+      # most exposed to: react-native-css emits real CSS classes on web rather
+      # than runtime styles, so without a compiled utility stylesheet every
+      # layout class is a no-op while colours still look right, which is exactly
+      # the shape that survives review. Assert the stylesheet exists and that a
+      # utility the app actually uses made it in.
+      - name: Assert the web build emitted a utility stylesheet
+        run: |
+          set -euo pipefail
+          css="$(find dist/_expo/static/css -name 'global-*.css' -print -quit)"
+          if [ -z "$css" ]; then
+            echo "::error::no compiled Tailwind stylesheet in dist/_expo/static/css"
+            exit 1
+          fi
+          for utility in 'flex-row' 'bg-card' 'text-muted-foreground'; do
+            if ! grep -qF -- "$utility" "$css"; then
+              echo "::error::utility '$utility' is missing from $css, so the NativeWind/Tailwind pipeline is not wired"
+              exit 1
+            fi
+          done
+          echo "utility stylesheet: $css"
+
+  lockfile:
+    name: Lockfile is in sync with package.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      # Deliberately a plain install rather than `--frozen-lockfile`. The frozen
+      # flag only fails when a range resolves to nothing at all, so it passes
+      # cleanly on the desync that actually reaches main: a dependency range
+      # widened to something the lockfile does not record but the already-locked
+      # resolution still satisfies. Resolving for real and asking git whether
+      # bun.lock moved is what catches that.
+      - name: Resolve dependencies
+        run: bun install --ignore-scripts
+
+      - name: Assert bun.lock did not move
+        run: |
+          set -euo pipefail
+          if ! git diff --exit-code -- bun.lock; then
+            echo "::error::bun.lock is out of sync with package.json. Run 'bun install' and commit the lockfile in the same commit"
+            exit 1
+          fi

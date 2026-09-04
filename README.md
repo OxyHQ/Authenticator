@@ -10,15 +10,13 @@ A secure, open-source Two-Factor Authentication (2FA) app built with React Nativ
 - 🌙 **Dark/Light Theme**: Toggle between light and dark modes
 - 🌍 **Internationalization**: Support for multiple languages (English, Spanish)
 - 📱 **Cross-Platform**: Runs on iOS, Android, and Web
-- 🔐 **Secure Storage**: Local storage with encryption support
 
 ## Setup and Installation
 
 ### Prerequisites
 
-- Node.js (v18 or later)
-- npm or yarn
-- Expo CLI (`npm install -g @expo/cli`)
+- [Bun](https://bun.sh) 1.3 or later (this repository uses bun, never npm or yarn)
+- Node.js 22 or later (the Expo CLI runs on it)
 - For mobile development:
   - iOS: Xcode (macOS only)
   - Android: Android Studio
@@ -33,32 +31,41 @@ A secure, open-source Two-Factor Authentication (2FA) app built with React Nativ
 
 2. **Install dependencies**
    ```bash
-   npm install
+   bun install
    ```
 
 3. **Start the development server**
    ```bash
-   npm start
+   bun run start
    ```
 
 4. **Run on specific platforms**
    ```bash
    # iOS (requires macOS and Xcode)
-   npm run ios
-   
+   bun run ios
+
    # Android (requires Android Studio)
-   npm run android
-   
+   bun run android
+
    # Web
-   npm run web
+   bun run web
    ```
 
 ### Development Setup
 
-1. **Lint the code**
+1. **Check the code**
    ```bash
-   npm run lint
+   bun run typecheck   # tsc --noEmit
+   bun run lint        # expo lint
+   bun run test        # TOTP generator against the RFC 6238 vectors
+   bun run export:web  # production web bundle -> dist/
+   bun run export:native  # Metro + Hermes bundle -> dist-native/
    ```
+
+   All five run in CI on every pull request. `export:native` is not a duplicate
+   of `export:web`: the native bundle compiles `global.css` through a different
+   CSS pipeline and then through Hermes, so it catches failures the web build
+   cannot see. It needs no Android or Xcode toolchain.
 
 2. **Environment Setup**
    - The app uses Expo's development build system
@@ -84,7 +91,7 @@ A secure, open-source Two-Factor Authentication (2FA) app built with React Nativ
 
 #### Syncing Accounts
 1. **Navigate to Settings** > "Sync Accounts"
-2. **Sign in to Oxy** using your credentials
+2. **Sign in to Oxy** through the in-app account dialog
 3. **Upload to Cloud**: Sync your local accounts to the cloud
 4. **Download from Cloud**: Retrieve accounts from other devices
 
@@ -96,74 +103,54 @@ A secure, open-source Two-Factor Authentication (2FA) app built with React Nativ
 
 1. **Create an Oxy Account**: Visit [Oxy platform](https://oxy.so) to create an account
 2. **Sign In**: Use the "Sync Accounts" feature in settings
-3. **Sync Data**: Your accounts will be encrypted and stored securely
+3. **Sync Data**: Your accounts are stored against your Oxy account so they are available on your other devices
 
 ## Configuration Options
 
-### App Configuration (`app.json`)
+### App Configuration (`app.config.js`)
 
-The app can be configured through the `app.json` file:
-
-```json
-{
-  "expo": {
-    "name": "Authenticator by Oxy",
-    "slug": "oxy-authenticator",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "scheme": "myapp",
-    "userInterfaceStyle": "automatic"
-  }
-}
-```
+Expo config lives in `app.config.js`. Native and build configuration comes from
+[`@oxyhq/app-preset`](https://www.npmjs.com/package/@oxyhq/app-preset) rather
+than being restated here. The preset supplies the iOS deployment target, the
+Android SDK and release-minification defaults, and the Metro, Babel, ESLint,
+Tailwind and TypeScript bases. `metro.config.js`, `babel.config.js` and
+`eslint.config.js` are each a single line that delegates to it.
 
 ### Key Configuration Options:
 
 - **Camera Permissions**: Configured for QR code scanning
-- **Scheme**: Deep linking support with `myapp://` scheme
+- **Scheme**: Deep linking support with `oxyauthenticator://`
 - **User Interface**: Automatic light/dark mode detection
 - **Orientation**: Portrait mode only for optimal mobile experience
 
 ### Environment Variables
 
-The app connects to Oxy services using:
-- **Base URL**: `https://api.oxy.so` (configured in `_layout.tsx`)
-- **Storage Prefix**: `oxy_example` for authentication tokens
+Runtime configuration lives in `lib/config.ts`, read from `EXPO_PUBLIC_*`:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `EXPO_PUBLIC_API_URL` | `https://api.oxy.so` | Oxy API base URL |
+| `EXPO_PUBLIC_OXY_CLIENT_ID` | empty | The app's registered Oxy client id |
 
 ### Theme Configuration
 
-Themes are configured in `contexts/ThemeContext.tsx`:
-
-```typescript
-// Light theme colors
-const lightTheme = {
-  background: '#f8f9fa',
-  surface: '#ffffff',
-  text: '#202124',
-  primary: '#1a73e8',
-  // ... more colors
-}
-
-// Dark theme colors
-const darkTheme = {
-  background: '#1a1a1a',
-  surface: '#2d2d2d',
-  text: '#ffffff',
-  primary: '#8ab4f8',
-  // ... more colors
-}
-```
+Theming is [Bloom](https://www.npmjs.com/package/@oxyhq/bloom), seeded from the
+app's own brand blue (`BRAND_SEED` in `lib/config.ts`). Bloom's tonal engine
+derives the full light and dark role sets from that single colour, and
+`BloomProvider` persists the user's mode choice. Components style themselves
+with NativeWind classes against the role tokens (`bg-background`, `bg-card`,
+`text-foreground`, `text-muted-foreground`, `border-border`, `text-primary`)
+rather than with hardcoded hex values.
 
 ### Internationalization
 
-Languages are configured in the `i18n/` directory:
-- `en.json`: English translations
-- `es.json`: Spanish translations
+Translations are bundled in `i18n/index.ts` as a `resources` object with an `en`
+and an `es` block.
 
 To add a new language:
-1. Create a new JSON file in `i18n/`
-2. Add translations for all keys
-3. Update the language toggle in `settings.tsx`
+1. Add a block for it alongside `en` and `es`
+2. Add translations for every key
+3. Update the language toggle in `app/(tabs)/settings.tsx`
 
 ## Architecture
 
@@ -176,38 +163,36 @@ To add a new language:
 │   │   ├── scan.tsx       # QR code scanner
 │   │   ├── settings.tsx   # App settings
 │   │   └── sync.tsx       # Cloud sync management
+│   ├── +not-found.tsx     # Unmatched route
 │   └── _layout.tsx        # Root layout and providers
 ├── components/            # Reusable components
-│   ├── OTPCode.tsx       # TOTP code display component
+│   ├── OTPCode.tsx        # TOTP code display component
 │   └── SafeAreaHeader.tsx # Header component
-├── contexts/             # React contexts
-│   └── ThemeContext.tsx  # Theme management
-├── i18n/                 # Internationalization
-├── utils/                # Utility functions
-│   └── totp.ts          # TOTP generation logic
-└── assets/              # Static assets
+├── lib/config.ts          # Env-backed runtime config
+├── i18n/                  # Internationalization
+├── utils/                 # Utility functions
+│   ├── totp.ts            # TOTP generation logic
+│   └── __tests__/         # RFC 6238 vector tests
+└── assets/                # Static assets
 ```
 
 ### Key Components
 
 - **OTPCode**: Displays TOTP codes with auto-refresh
-- **ThemeProvider**: Manages light/dark theme state
 - **SafeAreaHeader**: Consistent header across screens
-- **Oxy Integration**: Cloud sync and authentication
+- **BloomProvider**: Theme, haptics and scroll restoration
+- **OxyProvider**: The single session authority, covering sign-in, the query client, and the Bloom surface, dialog and toast hosts
 
 ### Data Flow
 
-1. **Local Storage**: Accounts stored in AsyncStorage
-2. **TOTP Generation**: Time-based codes generated client-side
-3. **Cloud Sync**: Optional backup to Oxy platform
-4. **Theme State**: Persisted user preferences
+1. **Local Storage**: Accounts stored in AsyncStorage under the `accounts` key
+2. **TOTP Generation**: Time-based codes generated client-side, entirely offline
+3. **Cloud Sync**: Optional, through the Oxy SDK's per-user app-data store
+4. **Theme State**: Persisted by Bloom
 
 ## FAQ and Troubleshooting
 
 ### Frequently Asked Questions
-
-**Q: Is this app secure?**
-A: Yes, the app stores your secrets locally on your device using AsyncStorage. Cloud sync is optional and uses encrypted storage through the Oxy platform.
 
 **Q: Can I use this without creating an Oxy account?**
 A: Absolutely! The app works perfectly as a standalone authenticator. The Oxy account is only needed for cross-device sync.
@@ -241,9 +226,9 @@ A: Currently, accounts can be synced to Oxy cloud. Local export features may be 
 - **Update**: Ensure you're running the latest version
 
 #### Build Issues
-- **Dependencies**: Run `npm install` to ensure all dependencies are installed
-- **Cache**: Clear Expo cache with `npx expo start --clear`
-- **Node version**: Ensure you're using Node.js v18 or later
+- **Dependencies**: Run `bun install` to ensure all dependencies are installed
+- **Cache**: Clear Expo cache with `bunx expo start --clear`
+- **Bun version**: Match the version CI pins in `.github/workflows/ci.yml`
 
 ### Getting Help
 
@@ -255,11 +240,11 @@ If you encounter issues not covered here:
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to get started.
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to get started. Engineering standards for this repository, for humans and AI agents alike, are in [AGENTS.md](AGENTS.md).
 
 ## License
 
-This project is open source. Please check the repository for license information.
+This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
 ## Credits
 

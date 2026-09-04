@@ -4,6 +4,8 @@ node_modules/
 # expo
 .expo/
 dist/
+dist-native/
+dist-ios/
 web-build/
 expo-env.d.ts
 
@@ -27,8 +29,11 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# local env files. `.env*.local` alone did not cover a plain `.env`, which is
+# the file a developer actually creates for EXPO_PUBLIC_* overrides.
+.env
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo
