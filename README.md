@@ -56,7 +56,8 @@ A secure, open-source Two-Factor Authentication (2FA) app built with React Nativ
 1. **Check the code**
    ```bash
    bun run typecheck   # tsc --noEmit
-   bun run lint        # expo lint
+   bun run lint        # Biome check + minimal Expo ESLint (expo lint .)
+   bun run format      # Biome format --write
    bun run test        # TOTP generator against the RFC 6238 vectors
    bun run export:web  # production web bundle -> dist/
    bun run export:native  # Metro + Hermes bundle -> dist-native/
@@ -112,9 +113,11 @@ A secure, open-source Two-Factor Authentication (2FA) app built with React Nativ
 Expo config lives in `app.config.js`. Native and build configuration comes from
 [`@oxyhq/app-preset`](https://www.npmjs.com/package/@oxyhq/app-preset) rather
 than being restated here. The preset supplies the iOS deployment target, the
-Android SDK and release-minification defaults, and the Metro, Babel, ESLint,
-Tailwind and TypeScript bases. `metro.config.js`, `babel.config.js` and
-`eslint.config.js` are each a single line that delegates to it.
+Android SDK and release-minification defaults, and the Metro, Babel,
+Tailwind and TypeScript bases. `metro.config.js` and `babel.config.js` are
+each a single line that delegates to it. Formatting and linting are Biome
+(`biome.json`); `eslint.config.js` is a minimal config that keeps only the
+Expo env-var rules Biome has no equivalent for.
 
 ### Key Configuration Options:
 

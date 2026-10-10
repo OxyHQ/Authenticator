@@ -31,7 +31,8 @@ Platform shortcuts and linting:
 bun run ios        # iOS simulator
 bun run android    # Android emulator
 bun run web        # browser
-bun run lint       # expo lint
+bun run lint       # Biome check + minimal Expo ESLint (expo lint .)
+bun run format     # Biome format --write
 bunx expo start --clear   # when Metro serves something stale
 ```
 

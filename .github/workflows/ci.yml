@@ -58,8 +58,17 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
-      - name: Lint
-        run: bun run lint
+      # Biome owns formatting and linting. `biome ci` is the read-only form of
+      # `biome check`: it fails on unformatted files instead of rewriting them.
+      - name: Biome
+        run: bunx biome ci .
+
+      # The minimal ESLint config keeps only the Expo env-var rules Biome has no
+      # equivalent for. `expo lint .`, not bare `expo lint`: the bare form only
+      # lints app/, components/ and src/, and every EXPO_PUBLIC_* read lives in
+      # lib/config.ts.
+      - name: Expo lint
+        run: bunx expo lint .
 
       # The TOTP generator is the whole point of this app, and its suite pins it
       # against the RFC 6238 vectors rather than against itself.
