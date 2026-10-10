@@ -36,7 +36,7 @@ export default function AccountsScreen() {
   useFocusEffect(
     useCallback(() => {
       loadAccounts();
-    }, [loadAccounts])
+    }, [loadAccounts]),
   );
 
   return (

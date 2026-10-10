@@ -9,7 +9,8 @@ const resources = {
       settings: 'Settings',
       clearAllAccounts: 'Clear All Accounts',
       clearConfirmTitle: 'Clear All Accounts',
-      clearConfirmMessage: 'Are you sure you want to remove all accounts? This action cannot be undone.',
+      clearConfirmMessage:
+        'Are you sure you want to remove all accounts? This action cannot be undone.',
       cancel: 'Cancel',
       clear: 'Clear',
       version: 'Version',
@@ -33,7 +34,8 @@ const resources = {
       cameraRequiredMessage:
         'Camera access is required to scan QR codes. Please enable camera access in your device settings.',
       cameraGrant: 'Grant Permission',
-      signInToSync: 'Sign in to your Oxy account to sync your authenticator accounts across your devices.',
+      signInToSync:
+        'Sign in to your Oxy account to sync your authenticator accounts across your devices.',
       syncToCloud: 'Sync to Cloud',
       retrieveFromCloud: 'Retrieve from Cloud',
       lastSynced: 'Last synced',
@@ -46,7 +48,8 @@ const resources = {
       retrieveSuccessTitle: 'Retrieval Successful',
       retrieveSuccessMessage: 'Your accounts have been successfully retrieved from the cloud.',
       retrieveErrorTitle: 'Retrieval Failed',
-      retrieveErrorMessage: 'There was an error retrieving your accounts from the cloud. Please try again.',
+      retrieveErrorMessage:
+        'There was an error retrieving your accounts from the cloud. Please try again.',
       retrieveConfirmTitle: 'Replace Local Accounts?',
       retrieveConfirmMessage:
         'This will replace your local accounts with those stored in the cloud. Do you want to continue?',

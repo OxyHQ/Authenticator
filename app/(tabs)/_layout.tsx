@@ -26,7 +26,8 @@ export default function TabLayout() {
         },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textSecondary,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -38,7 +39,9 @@ export default function TabLayout() {
         name="scan"
         options={{
           title: t('scanQr'),
-          tabBarIcon: ({ color }) => <Icons.QrCode_Stroke2_Corner0_Rounded size="lg" fill={color} />,
+          tabBarIcon: ({ color }) => (
+            <Icons.QrCode_Stroke2_Corner0_Rounded size="lg" fill={color} />
+          ),
         }}
       />
       <Tabs.Screen

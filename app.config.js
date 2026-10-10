@@ -32,7 +32,8 @@ module.exports = {
       [
         'expo-camera',
         {
-          cameraPermission: 'Allow $(PRODUCT_NAME) to access your camera to scan authenticator QR codes',
+          cameraPermission:
+            'Allow $(PRODUCT_NAME) to access your camera to scan authenticator QR codes',
           recordAudioAndroid: false,
         },
       ],
