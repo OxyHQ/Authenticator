@@ -36,7 +36,7 @@ Please check all that apply:
 - [ ] 💬 Code is commented, particularly in hard-to-understand areas
 - [ ] 📖 Documentation has been updated (if needed)
 - [ ] ⚠️ No new warnings or errors introduced
-- [ ] 🧹 Linter passes (`npm run lint`)
+- [ ] 🧹 Linter passes (`bun run lint`)
 
 ## Screenshots/Videos
 Include screenshots or videos that demonstrate the changes (especially for UI changes).

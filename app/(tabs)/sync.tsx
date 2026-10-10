@@ -103,7 +103,7 @@ export default function SyncScreen() {
     try {
       const cloudAccounts = await oxyServices.getAppData<Account[]>(
         APP_DATA_NAMESPACE,
-        APP_DATA_KEY
+        APP_DATA_KEY,
       );
 
       if (!cloudAccounts || cloudAccounts.length === 0) {
