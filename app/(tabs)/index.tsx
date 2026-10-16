@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Button } from '@oxyhq/bloom/button';
-import { P } from '@oxyhq/bloom/typography';
+import { Button } from '@oxy.so/bloom/button';
+import { P } from '@oxy.so/bloom/typography';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';

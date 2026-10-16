@@ -23,7 +23,7 @@ bun install
 bun start          # Expo dev server; press i, a or w to open a platform
 ```
 
-There is no `.env` file to copy. The app talks to Oxy through `@oxyhq/services` and needs no local secrets to boot.
+There is no `.env` file to copy. The app talks to Oxy through `@oxy.so/services` and needs no local secrets to boot.
 
 Platform shortcuts and linting:
 

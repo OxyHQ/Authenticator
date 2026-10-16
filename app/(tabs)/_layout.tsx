@@ -1,5 +1,8 @@
-import * as Icons from '@oxyhq/bloom/icons';
-import { useBloomTheme } from '@oxyhq/bloom/theme';
+import { RiKey2Line } from '@oxy.so/bloom/icons/RiKey2Line';
+import { RiQrCodeLine } from '@oxy.so/bloom/icons/RiQrCodeLine';
+import { RiResetRightLine } from '@oxy.so/bloom/icons/RiResetRightLine';
+import { RiSettings3Line } from '@oxy.so/bloom/icons/RiSettings3Line';
+import { useBloomTheme } from '@oxy.so/bloom/theme';
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,34 +35,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t('accounts'),
-          tabBarIcon: ({ color }) => <Icons.Key_Stroke2_Corner2_Rounded size="lg" fill={color} />,
+          tabBarIcon: ({ color }) => <RiKey2Line size="lg" fill={color} />,
         }}
       />
       <Tabs.Screen
         name="scan"
         options={{
           title: t('scanQr'),
-          tabBarIcon: ({ color }) => (
-            <Icons.QrCode_Stroke2_Corner0_Rounded size="lg" fill={color} />
-          ),
+          tabBarIcon: ({ color }) => <RiQrCodeLine size="lg" fill={color} />,
         }}
       />
       <Tabs.Screen
         name="sync"
         options={{
           title: t('sync'),
-          tabBarIcon: ({ color }) => (
-            <Icons.ArrowRotateClockwise_Stroke2_Corner0_Rounded size="lg" fill={color} />
-          ),
+          tabBarIcon: ({ color }) => <RiResetRightLine size="lg" fill={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: t('settings'),
-          tabBarIcon: ({ color }) => (
-            <Icons.SettingsGear2_Stroke2_Corner0_Rounded size="lg" fill={color} />
-          ),
+          tabBarIcon: ({ color }) => <RiSettings3Line size="lg" fill={color} />,
         }}
       />
     </Tabs>

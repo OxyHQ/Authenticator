@@ -1,8 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Button } from '@oxyhq/bloom/button';
-import * as Icons from '@oxyhq/bloom/icons';
-import { useBloomTheme } from '@oxyhq/bloom/theme';
-import { H3, P } from '@oxyhq/bloom/typography';
+import { Button } from '@oxy.so/bloom/button';
+import { RiCameraLine } from '@oxy.so/bloom/icons/RiCameraLine';
+import { RiQrCodeLine } from '@oxy.so/bloom/icons/RiQrCodeLine';
+import { RiResetRightLine } from '@oxy.so/bloom/icons/RiResetRightLine';
+import { useBloomTheme } from '@oxy.so/bloom/theme';
+import { H3, P } from '@oxy.so/bloom/typography';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -105,7 +107,7 @@ export default function ScanScreen() {
     return (
       <SafeAreaView className="flex-1 bg-background">
         <View className="flex-1 items-center justify-center gap-4 p-8">
-          <Icons.Camera_Stroke2_Corner0_Rounded size="3xl" fill={theme.colors.negative} />
+          <RiCameraLine size="3xl" fill={theme.colors.negative} />
           <H3 className="text-center text-foreground">{t('cameraRequiredTitle')}</H3>
           <P className="text-center text-muted-foreground">{t('cameraRequiredMessage')}</P>
           <Button onPress={requestPermission}>{t('cameraGrant')}</Button>
@@ -166,19 +168,14 @@ export default function ScanScreen() {
           {/* Bottom overlay with instructions */}
           <View className="flex-1 justify-end bg-black/60 pb-[60px]">
             <View className="mx-5 items-center gap-3 rounded-2xl bg-white/10 px-8 py-6">
-              <Icons.QrCode_Stroke2_Corner0_Rounded size="2xl" fill={theme.colors.primary} />
+              <RiQrCodeLine size="2xl" fill={theme.colors.primary} />
               <H3 className="text-center text-foreground">{t('scanTitle')}</H3>
               <P className="text-center text-muted-foreground">{t('scanInstructions')}</P>
 
               {scanned && (
                 <Button
                   onPress={() => setScanned(false)}
-                  icon={
-                    <Icons.ArrowRotateClockwise_Stroke2_Corner0_Rounded
-                      size="sm"
-                      fill={theme.colors.primaryForeground}
-                    />
-                  }
+                  icon={<RiResetRightLine size="sm" fill={theme.colors.primaryForeground} />}
                 >
                   {t('scanAgain')}
                 </Button>
