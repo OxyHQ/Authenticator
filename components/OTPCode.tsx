@@ -1,7 +1,7 @@
-import { PressableScale } from '@oxyhq/bloom/pressable-scale';
-import { useBloomTheme } from '@oxyhq/bloom/theme';
-import { toast } from '@oxyhq/bloom/toast';
-import { Text } from '@oxyhq/bloom/typography';
+import { PressableScale } from '@oxy.so/bloom/pressable-scale';
+import { useBloomTheme } from '@oxy.so/bloom/theme';
+import { toast } from '@oxy.so/bloom/toast';
+import { Text } from '@oxy.so/bloom/typography';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useState } from 'react';

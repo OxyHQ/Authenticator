@@ -111,7 +111,7 @@ A secure, open-source Two-Factor Authentication (2FA) app built with React Nativ
 ### App Configuration (`app.config.js`)
 
 Expo config lives in `app.config.js`. Native and build configuration comes from
-[`@oxyhq/app-preset`](https://www.npmjs.com/package/@oxyhq/app-preset) rather
+[`@oxy.so/app-preset`](https://www.npmjs.com/package/@oxy.so/app-preset) rather
 than being restated here. The preset supplies the iOS deployment target, the
 Android SDK and release-minification defaults, and the Metro, Babel,
 Tailwind and TypeScript bases. `metro.config.js` and `babel.config.js` are
@@ -137,7 +137,7 @@ Runtime configuration lives in `lib/config.ts`, read from `EXPO_PUBLIC_*`:
 
 ### Theme Configuration
 
-Theming is [Bloom](https://www.npmjs.com/package/@oxyhq/bloom), seeded from the
+Theming is [Bloom](https://www.npmjs.com/package/@oxy.so/bloom), seeded from the
 app's own brand blue (`BRAND_SEED` in `lib/config.ts`). Bloom's tonal engine
 derives the full light and dark role sets from that single colour, and
 `BloomProvider` persists the user's mode choice. Components style themselves

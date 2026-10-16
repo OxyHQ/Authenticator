@@ -1,10 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Button } from '@oxyhq/bloom/button';
-import { alert } from '@oxyhq/bloom/dialog';
-import * as Icons from '@oxyhq/bloom/icons';
-import { useBloomTheme } from '@oxyhq/bloom/theme';
-import { P, Text } from '@oxyhq/bloom/typography';
-import { useOxy } from '@oxyhq/services';
+import { Button } from '@oxy.so/bloom/button';
+import { alert } from '@oxy.so/bloom/surfaces';
+import { RiAccountCircleLine } from '@oxy.so/bloom/icons/RiAccountCircleLine';
+import { RiArrowUpLine } from '@oxy.so/bloom/icons/RiArrowUpLine';
+import { RiDownload2Line } from '@oxy.so/bloom/icons/RiDownload2Line';
+import { RiInformationLine } from '@oxy.so/bloom/icons/RiInformationLine';
+import { RiLockLine } from '@oxy.so/bloom/icons/RiLockLine';
+import { useBloomTheme } from '@oxy.so/bloom/theme';
+import { P, Text } from '@oxy.so/bloom/typography';
+import { useOxy } from '@oxy.so/services';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -82,7 +86,7 @@ export default function SyncScreen() {
       const storedAccounts = await AsyncStorage.getItem('accounts');
       const localAccounts: Account[] = storedAccounts ? JSON.parse(storedAccounts) : [];
 
-      await oxyServices.setAppData(APP_DATA_NAMESPACE, APP_DATA_KEY, localAccounts);
+      await oxyServices.appData.set(APP_DATA_NAMESPACE, APP_DATA_KEY, localAccounts);
       await markSynced();
 
       alert(t('syncSuccessTitle'), t('syncSuccessMessage'));
@@ -101,7 +105,7 @@ export default function SyncScreen() {
 
     setSyncStatus('syncing');
     try {
-      const cloudAccounts = await oxyServices.getAppData<Account[]>(
+      const cloudAccounts = await oxyServices.appData.get<Account[]>(
         APP_DATA_NAMESPACE,
         APP_DATA_KEY,
       );
@@ -157,14 +161,14 @@ export default function SyncScreen() {
       <View className="mt-5 border-y border-border bg-card">
         {!user ? (
           <View className="items-center justify-center gap-4 p-10">
-            <Icons.Lock_Stroke2_Corner0_Rounded size="3xl" fill={theme.colors.textSecondary} />
+            <RiLockLine size="3xl" fill={theme.colors.textSecondary} />
             <P className="text-center text-foreground">{t('signInToSync')}</P>
             <Button onPress={() => openAccountDialog()}>{t('signIn')}</Button>
           </View>
         ) : (
           <>
             <View className="flex-row items-center p-4">
-              <Icons.UserCircle_Stroke2_Corner0_Rounded size="3xl" fill={theme.colors.primary} />
+              <RiAccountCircleLine size="3xl" fill={theme.colors.primary} />
               <View className="ml-3 flex-1">
                 <Text className="text-xl font-semibold text-foreground">{user.username}</Text>
                 <Text className="mt-1 text-sm text-muted-foreground">
@@ -183,12 +187,7 @@ export default function SyncScreen() {
                 onPress={syncToCloud}
                 disabled={isBusy}
                 loading={syncStatus === 'syncing'}
-                icon={
-                  <Icons.ArrowTop_Stroke2_Corner0_Rounded
-                    size="lg"
-                    fill={theme.colors.primaryForeground}
-                  />
-                }
+                icon={<RiArrowUpLine size="lg" fill={theme.colors.primaryForeground} />}
               >
                 {t('syncToCloud')}
               </Button>
@@ -197,12 +196,7 @@ export default function SyncScreen() {
                 onPress={retrieveFromCloud}
                 disabled={isBusy}
                 loading={syncStatus === 'syncing'}
-                icon={
-                  <Icons.Download_Stroke2_Corner0_Rounded
-                    size="lg"
-                    fill={theme.colors.primaryForeground}
-                  />
-                }
+                icon={<RiDownload2Line size="lg" fill={theme.colors.primaryForeground} />}
               >
                 {t('retrieveFromCloud')}
               </Button>
@@ -212,7 +206,7 @@ export default function SyncScreen() {
       </View>
 
       <View className="flex-row items-center gap-2 p-4">
-        <Icons.CircleInfo_Stroke2_Corner0_Rounded size="lg" fill={theme.colors.textSecondary} />
+        <RiInformationLine size="lg" fill={theme.colors.textSecondary} />
         <P className="flex-1 text-sm text-muted-foreground">{t('syncInfo')}</P>
       </View>
     </View>

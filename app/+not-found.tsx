@@ -1,5 +1,5 @@
-import { Button } from '@oxyhq/bloom/button';
-import { H2 } from '@oxyhq/bloom/typography';
+import { Button } from '@oxy.so/bloom/button';
+import { H2 } from '@oxy.so/bloom/typography';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';

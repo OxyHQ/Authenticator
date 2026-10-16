@@ -37,22 +37,20 @@ module.exports = {
           recordAudioAndroid: false,
         },
       ],
-      // Shared Oxy native config. The shared-identity pieces are deliberately
-      // OFF for this app: `android:sharedUserId` would put a TOTP vault in the
-      // same Linux UID as every other Oxy app, where an in-place install of any
-      // sibling can invalidate keystore-backed entries, and it would bind every
-      // release build to the shared ecosystem keystore. Authenticator signs in
-      // through the SDK's per-origin device-first flow, which needs neither.
-      // What is kept is the shared build configuration: iOS deployment target
-      // 16.4 and the Android SDK / release-minification defaults.
-      [
-        '@oxyhq/app-preset',
-        {
-          sharedUserId: false,
-          keychainGroup: false,
-          sharedIdentityReader: false,
-        },
-      ],
+      // Only the shared Oxy build defaults (iOS deployment target 16.4, the
+      // Android SDK and release-minification knobs), NOT the full
+      // `@oxy.so/app-preset` plugin. The preset always applies
+      // `withOxySharedPermissions`, which declares and requests the signature
+      // permissions `so.oxy.permission.IDENTITY` and `DEVICE_SESSION`. A TOTP
+      // vault stays out of the ecosystem's identity IPC: on a device that
+      // already has another Oxy app, Android refuses a differently signed app
+      // declaring those permissions (INSTALL_FAILED_DUPLICATE_PERMISSION), so
+      // they would bind every release build to the shared ecosystem key.
+      // Authenticator is not on Commons' caller allow-list either, so the
+      // permissions would grant nothing. It signs in through the SDK's per-origin
+      // device-first flow and the in-app account dialog, which need neither the
+      // permissions nor the iOS keychain group.
+      '@oxy.so/app-preset/plugin/withOxyBuildProperties',
     ],
     experiments: {
       typedRoutes: true,

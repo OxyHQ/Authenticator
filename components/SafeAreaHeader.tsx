@@ -1,4 +1,4 @@
-import { H2 } from '@oxyhq/bloom/typography';
+import { H2 } from '@oxy.so/bloom/typography';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

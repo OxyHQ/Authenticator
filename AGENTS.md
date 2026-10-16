@@ -31,11 +31,11 @@ bun run export:native  # expo export --platform android -> dist-native/
 
 **Secrets on device.** Accounts live in `AsyncStorage` under the `accounts` key as an array of `{ secret, issuer, account }`. The storage key and the stored shape are a compatibility surface: an installed app upgrading in place must still find its accounts, so do not rename the key or reshape the value without a migration.
 
-**Cloud sync writes through the SDK, never a raw HTTP client.** `oxyServices.setAppData` / `getAppData` under the `authenticator` namespace. No app local axios instance, no manual `Authorization` header, no bespoke endpoint.
+**Cloud sync writes through the SDK, never a raw HTTP client.** `oxyServices.appData.set` / `appData.get` under the `authenticator` namespace. No app local axios instance, no manual `Authorization` header, no bespoke endpoint.
 
 **One provider tree.** `BloomProvider` (theme) wraps `OxyProvider` (session, query client, Bloom surface/dialog/toast hosts) in `app/_layout.tsx`. `OxyProvider` already mounts `SafeAreaProvider`, `GestureHandlerRootView`, the keyboard provider, the toast outlet and the dialog provider, so screens must not mount second copies. Interactive sign in is `useOxy().openAccountDialog()`, and the app never navigates to an IdP.
 
-**Native and Expo config comes from `@oxyhq/app-preset`,** not from files in this repo: `metro.config.js` and `babel.config.js` are one line each and `tsconfig.json` extends the preset. Change the preset rather than inlining config here. The preset's shared identity pieces (`android:sharedUserId`, the iOS keychain group, the shared identity reader) are deliberately disabled in `app.config.js`. Read the comment there before re-enabling any of them.
+**Native and Expo config comes from `@oxy.so/app-preset`,** not from files in this repo: `metro.config.js` and `babel.config.js` are one line each and `tsconfig.json` extends the preset. Change the preset rather than inlining config here. `app.config.js` applies only the preset's `plugin/withOxyBuildProperties`, never the full `@oxy.so/app-preset` plugin: that one always adds the Oxy signature permissions (which require the shared ecosystem signing key) and the iOS shared keychain group, and Authenticator deliberately stays out of both. Read the comment there before changing it.
 
 **`overrides.lightningcss` is load-bearing. Do not remove it, and do not assume a green web build means the app bundles.** react-native-css compiles `global.css` through lightningcss for NATIVE, while the web build goes through the PostCSS/Tailwind pipeline instead, so the two exercise different code. `@expo/metro-config` carries its own nested lightningcss, and when that copy resolved to 1.32.0 every native bundle died with `SyntaxError: global.css: failed to deserialize; expected an object-like struct named Specifier, found ()` while `expo export --platform web` stayed perfectly green. Two details make this hard to rediscover: pinning `lightningcss` as a direct dependency is NOT enough, because it does not reach the nested copy, and adding the override to `package.json` is not enough either, because bun does not re-apply a root override to an already-resolved nested dependency on an incremental install. It takes the override plus `rm -rf node_modules && bun install`. `bun run export:native` runs in CI for exactly this reason; keep it there.
 
@@ -43,7 +43,7 @@ bun run export:native  # expo export --platform android -> dist-native/
 
 **Theming is Bloom, seeded from the app's own blue** (`BRAND_SEED` in `lib/config.ts`). Use NativeWind classes against Bloom's role tokens (`bg-background`, `bg-card`, `text-foreground`, `text-muted-foreground`, `border-border`, `text-primary`). Reach for `useBloomTheme().theme.colors` only where a class cannot apply: navigator chrome, SVG `fill`, a computed dimension. Never hardcode a hex in a component.
 
-**Alerts are `alert()` from `@oxyhq/bloom/dialog`,** not React Native's `Alert`, which is a no-op on web and this app ships to web.
+**Alerts are `alert()` from `@oxy.so/bloom/surfaces`,** not React Native's `Alert`, which is a no-op on web and this app ships to web.
 
 ---
 
