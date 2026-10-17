@@ -19,7 +19,7 @@
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
     "@oxy.so/app-preset": "3.2.1",
-    "@oxy.so/bloom": "10.14.1",
+    "@oxy.so/bloom": "10.16.0",
     "@oxy.so/core": "4.13.0",
     "@oxy.so/services": "11.6.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
