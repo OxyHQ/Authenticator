@@ -8,7 +8,7 @@ import { RiInformationLine } from '@oxy.so/bloom/icons/RiInformationLine';
 import { RiLockLine } from '@oxy.so/bloom/icons/RiLockLine';
 import { useBloomTheme } from '@oxy.so/bloom/theme';
 import { P, Text } from '@oxy.so/bloom/typography';
-import { useOxy } from '@oxy.so/services';
+import { useOxy } from '@oxy.so/services/ui/client';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
