@@ -8,6 +8,10 @@ import '../i18n';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BloomProvider } from '@oxy.so/bloom/provider';
+// The root entry, not the lean `@oxy.so/services/ui/client`: in services 12.2.0
+// only the root entry calls `setPlatformOS(Platform.OS)`, so a native build that
+// imports nothing but lean entries reports its platform to @oxy.so/core as
+// 'unknown'. The cost is web first paint, which keeps the account screens.
 import { OxyProvider } from '@oxy.so/services';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';

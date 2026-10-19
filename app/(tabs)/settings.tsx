@@ -14,7 +14,7 @@ import {
 import { Switch } from '@oxy.so/bloom/switch';
 import { useBloomTheme } from '@oxy.so/bloom/theme';
 import { P } from '@oxy.so/bloom/typography';
-import { useOxy } from '@oxy.so/services';
+import { useOxy } from '@oxy.so/services/ui/client';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
