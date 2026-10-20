@@ -28,7 +28,10 @@ module.exports = {
       favicon: './assets/images/favicon.png',
     },
     plugins: [
-      'expo-router',
+      // SDK 58 splits every web route into its own lazily loaded chunk unless
+      // told otherwise. Four tabs gain nothing from that, so the web build keeps
+      // the single eagerly loaded bundle it shipped on SDK 57.
+      ['expo-router', { asyncRoutes: { web: false } }],
       [
         'expo-camera',
         {
