@@ -53,7 +53,14 @@ module.exports = {
       // permissions would grant nothing. It signs in through the SDK's per-origin
       // device-first flow and the in-app account dialog, which need neither the
       // permissions nor the iOS keychain group.
-      '@oxy.so/app-preset/plugin/withOxyBuildProperties',
+      //
+      // `gifEnabled`/`webpEnabled: false` (Expo SDK 58+) leave Fresco's GIF and WebP
+      // decoders out of the Android build: nothing here draws through react-native's
+      // own Image — Bloom and @oxy.so/services render with expo-image.
+      [
+        '@oxy.so/app-preset/plugin/withOxyBuildProperties',
+        { android: { gifEnabled: false, webpEnabled: false } },
+      ],
     ],
     experiments: {
       typedRoutes: true,
