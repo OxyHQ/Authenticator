@@ -8,13 +8,19 @@ import '../i18n';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BloomProvider } from '@oxy.so/bloom/provider';
-import { OxyProvider } from '@oxy.so/services/ui/client';
+import { OxyProvider, useAccountColor } from '@oxy.so/services/ui/client';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { API_URL, BRAND_SEED, OXY_CLIENT_ID, THEME_PERSIST_KEY } from '@/lib/config';
+
+/** Wears the signed-in account's Oxy colour; must sit below both providers. */
+function AccountColor() {
+  useAccountColor();
+  return null;
+}
 
 export default function RootLayout() {
   return (
@@ -35,6 +41,7 @@ export default function RootLayout() {
               redirects to an external login page. Interactive sign-in is the
               in-app account dialog. */}
           <OxyProvider baseURL={API_URL} clientId={OXY_CLIENT_ID}>
+            <AccountColor />
             <Stack screenOptions={{ headerShown: false }} />
             <StatusBar style="auto" />
           </OxyProvider>
