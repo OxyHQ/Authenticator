@@ -63,14 +63,23 @@ export default function SyncScreen() {
     loadData();
   }, []);
 
-  const markSynced = async (nextAccounts?: Account[]) => {
+  const assertCurrentSession = (epoch: number) => {
+    if (oxyServices.http.getSessionEpoch() !== epoch) {
+      throw new Error('The Oxy account changed during cloud sync');
+    }
+  };
+
+  const markSynced = async (epoch: number, nextAccounts?: Account[]) => {
+    assertCurrentSession(epoch);
     if (nextAccounts) {
       await AsyncStorage.setItem('accounts', JSON.stringify(nextAccounts));
+      assertCurrentSession(epoch);
       setAccounts(nextAccounts);
     }
 
     const now = new Date();
     await AsyncStorage.setItem('lastSyncTime', now.toISOString());
+    assertCurrentSession(epoch);
     setLastSynced(now);
     setSyncStatus('success');
   };
@@ -81,13 +90,15 @@ export default function SyncScreen() {
       return;
     }
 
+    const epoch = oxyServices.http.getSessionEpoch();
     setSyncStatus('syncing');
     try {
       const storedAccounts = await AsyncStorage.getItem('accounts');
       const localAccounts: Account[] = storedAccounts ? JSON.parse(storedAccounts) : [];
 
+      assertCurrentSession(epoch);
       await oxyServices.appData.set(APP_DATA_NAMESPACE, APP_DATA_KEY, localAccounts);
-      await markSynced();
+      await markSynced(epoch);
 
       alert(t('syncSuccessTitle'), t('syncSuccessMessage'));
     } catch (error) {
@@ -103,6 +114,7 @@ export default function SyncScreen() {
       return;
     }
 
+    const epoch = oxyServices.http.getSessionEpoch();
     setSyncStatus('syncing');
     try {
       const cloudAccounts = await oxyServices.appData.get<Account[]>(
@@ -110,6 +122,7 @@ export default function SyncScreen() {
         APP_DATA_KEY,
       );
 
+      assertCurrentSession(epoch);
       if (!cloudAccounts || cloudAccounts.length === 0) {
         setSyncStatus('idle');
         alert(t('noCloudDataTitle'), t('noCloudDataMessage'));
@@ -117,7 +130,7 @@ export default function SyncScreen() {
       }
 
       const applyCloudAccounts = async () => {
-        await markSynced(cloudAccounts);
+        await markSynced(epoch, cloudAccounts);
         alert(t('retrieveSuccessTitle'), t('retrieveSuccessMessage'));
       };
 

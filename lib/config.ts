@@ -3,15 +3,10 @@
 /** Oxy API base URL. */
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api.oxy.so';
 
-/**
- * The app's registered Oxy client id (an `ApplicationCredential` publicKey,
- * `oxy_dk_…`). Authenticator does not have one registered yet, so this is empty
- * by default: the in-app account dialog still signs in from an existing device
- * session, but the cross-device Commons/QR sign-in route cannot start without a
- * real client id. Set `EXPO_PUBLIC_OXY_CLIENT_ID` once the app is registered in
- * the Oxy console.
- */
-export const OXY_CLIENT_ID = process.env.EXPO_PUBLIC_OXY_CLIENT_ID ?? '';
+/** Registered public client; the id identifies Authenticator and is not a secret. */
+export const OXY_CLIENT_ID =
+  process.env.EXPO_PUBLIC_OXY_CLIENT_ID ??
+  'oxy_dk_db94c11af984e6ea963ca1581ed13708bcf061b422b92907';
 
 /**
  * Brand seed for the Bloom theme. This is the app's own primary blue, kept
