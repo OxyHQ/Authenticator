@@ -115,7 +115,11 @@ Expo config lives in `app.config.js`. Native and build configuration comes from
 than being restated here. The preset supplies the iOS deployment target, the
 Android SDK and release-minification defaults, and the Metro, Babel,
 Tailwind and TypeScript bases. `metro.config.js` and `babel.config.js` are
-each a single line that delegates to it. Formatting and linting are Biome
+each a single line that delegates to it. Development bundles use Noxcturnal,
+Expo's oxc transformer (`experiments.noxcturnalTransformWorker` in
+`app.config.js`), which runs only while the Babel config is the preset's bare
+`babel-preset-expo`; production exports stay on Babel. `@/` resolves through
+the `tsconfig.json` paths, not a Babel plugin. Formatting and linting are Biome
 (`biome.json`); `eslint.config.js` is a minimal config that keeps only the
 Expo env-var rules Biome has no equivalent for.
 
