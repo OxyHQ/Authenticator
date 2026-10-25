@@ -72,6 +72,14 @@ A secure, open-source Two-Factor Authentication (2FA) app built with React Nativ
    - The app uses Expo's development build system
    - Camera permissions are required for QR code scanning
    - Internet access is required for cloud sync features
+   - Authenticator has its own registered public Oxy client (default in `lib/config.ts`).
+     Sign-in uses the shared account dialog without application scopes or consent.
+     `EXPO_PUBLIC_OXY_CLIENT_ID` may override it for a separately registered client;
+     it is public configuration, never a credential or workload identity.
+   - Cloud sync stays bound to the account that started it. Changing accounts
+     cancels or discards the previous operation, including a pending overwrite
+     confirmation. The existing local `accounts` storage shape and TOTP algorithm
+     are unchanged; Authenticator retains its separate native identity storage.
 
 ## Usage Examples
 
