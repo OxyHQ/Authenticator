@@ -1,12 +1,12 @@
+import { useHapticFeedback } from '@oxy.so/bloom/hooks';
 import { PressableScale } from '@oxy.so/bloom/pressable-scale';
 import { useBloomTheme } from '@oxy.so/bloom/theme';
 import { toast } from '@oxy.so/bloom/toast';
 import { Text } from '@oxy.so/bloom/typography';
 import * as Clipboard from 'expo-clipboard';
-import * as Haptics from 'expo-haptics';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 
 import { generateTOTP } from '../utils/totp';
 
@@ -27,6 +27,7 @@ export default function OTPCode({ secret, issuer, account }: OTPCodeProps) {
   const [timeLeft, setTimeLeft] = useState(PERIOD_SECONDS);
   const { theme } = useBloomTheme();
   const { t } = useTranslation();
+  const haptics = useHapticFeedback();
 
   useEffect(() => {
     const generateCode = async () => {
@@ -48,9 +49,7 @@ export default function OTPCode({ secret, issuer, account }: OTPCodeProps) {
   }, [secret]);
 
   const handlePress = async () => {
-    if (Platform.OS !== 'web') {
-      Haptics.selectionAsync();
-    }
+    haptics.selection();
     await Clipboard.setStringAsync(code);
     toast(t('codeCopied'));
   };
