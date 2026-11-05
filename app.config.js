@@ -40,6 +40,13 @@ module.exports = {
           recordAudioAndroid: false,
         },
       ],
+      // `expo-secure-store` is a dependency (a required native peer of
+      // @oxy.so/services, which keeps the session in it) but its config plugin
+      // is deliberately not applied. The plugin writes Android Auto Backup rules
+      // that `<include>` shared preferences only, and an include list backs up
+      // nothing else, so it would silently stop backing up the AsyncStorage
+      // database that holds every account's secret. Changing what a TOTP vault
+      // backs up is a product decision, not a side effect of a dependency.
       // Only the shared Oxy build defaults (iOS deployment target 16.4, the
       // Android SDK and release-minification knobs), NOT the full
       // `@oxy.so/app-preset` plugin. The preset always applies
