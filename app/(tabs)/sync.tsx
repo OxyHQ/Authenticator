@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import SafeAreaHeader from '../../components/SafeAreaHeader';
+import AppScreen from '../../components/AppScreen';
 
 interface Account {
   secret: string;
@@ -168,9 +168,7 @@ export default function SyncScreen() {
   const isBusy = syncStatus === 'syncing' || !canUsePrivateApi;
 
   return (
-    <View className="flex-1 bg-background">
-      <SafeAreaHeader title={t('syncAccounts')} />
-
+    <AppScreen title={t('syncAccounts')}>
       <View className="mt-5 border-y border-border bg-card">
         {!user ? (
           <View className="items-center justify-center gap-4 p-10">
@@ -222,6 +220,6 @@ export default function SyncScreen() {
         <RiInformationLine size="lg" fill={theme.colors.textSecondary} />
         <P className="flex-1 text-sm text-muted-foreground">{t('syncInfo')}</P>
       </View>
-    </View>
+    </AppScreen>
   );
 }

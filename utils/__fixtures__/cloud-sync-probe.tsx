@@ -35,7 +35,9 @@ for (const icon of [
 ]) {
   mock.module(`@oxy.so/bloom/icons/${icon}`, () => ({ [icon]: () => null }));
 }
-mock.module('../../components/SafeAreaHeader', () => ({ default: () => null }));
+mock.module('../../components/AppScreen', () => ({
+  default: ({ children }: { children: React.ReactNode }) => children,
+}));
 mock.module('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 type Action = { text: string; onPress?: () => void };
 let confirmation: Action[] | undefined;

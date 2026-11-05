@@ -20,7 +20,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-import SafeAreaHeader from '../../components/SafeAreaHeader';
+import AppScreen from '../../components/AppScreen';
 import i18n from '../../i18n';
 
 export default function SettingsScreen() {
@@ -53,9 +53,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
-      <SafeAreaHeader title={t('settings')} />
-
+    <AppScreen title={t('settings')}>
       <SettingsListGroup>
         <SettingsListItem
           icon={
@@ -114,6 +112,6 @@ export default function SettingsScreen() {
           {t('version')} {Constants.expoConfig?.version ?? ''}
         </P>
       </View>
-    </View>
+    </AppScreen>
   );
 }

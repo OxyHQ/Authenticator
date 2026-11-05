@@ -4,10 +4,10 @@ import { P } from '@oxy.so/bloom/typography';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
 import OTPCode from '../../components/OTPCode';
-import SafeAreaHeader from '../../components/SafeAreaHeader';
+import AppScreen from '../../components/AppScreen';
 
 interface Account {
   secret: string;
@@ -40,26 +40,22 @@ export default function AccountsScreen() {
   );
 
   return (
-    <View className="flex-1 bg-background">
-      <SafeAreaHeader title={t('authenticator')} />
-
-      <ScrollView className="flex-1" contentContainerClassName="pb-4">
-        {accounts.length === 0 ? (
-          <View className="mt-[100px] flex-1 items-center justify-center gap-5 p-8">
-            <P className="text-center leading-6 text-muted-foreground">{t('noAccounts')}</P>
-            <Button onPress={() => router.push('/scan')}>{t('addAccount')}</Button>
-          </View>
-        ) : (
-          accounts.map((account, index) => (
-            <OTPCode
-              key={index}
-              secret={account.secret}
-              issuer={account.issuer}
-              account={account.account}
-            />
-          ))
-        )}
-      </ScrollView>
-    </View>
+    <AppScreen title={t('authenticator')} contentContainerClassName="pb-4">
+      {accounts.length === 0 ? (
+        <View className="mt-[100px] flex-1 items-center justify-center gap-5 p-8">
+          <P className="text-center leading-6 text-muted-foreground">{t('noAccounts')}</P>
+          <Button onPress={() => router.push('/scan')}>{t('addAccount')}</Button>
+        </View>
+      ) : (
+        accounts.map((account, index) => (
+          <OTPCode
+            key={index}
+            secret={account.secret}
+            issuer={account.issuer}
+            account={account.account}
+          />
+        ))
+      )}
+    </AppScreen>
   );
 }
