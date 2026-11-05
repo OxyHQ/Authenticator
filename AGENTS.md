@@ -21,6 +21,7 @@ bun run lint           # biome check . && expo lint .
 bun run lint:fix       # biome check --write .
 bun run format         # biome format --write .
 bun run test           # bun test, RFC 6238 vectors for the TOTP generator
+bun run doctor:oxy     # oxy-doctor --ci: duplicate copies, Oxy releases, services' native peers
 bun run export:web     # expo export --platform web -> dist/
 bun run export:native  # expo export --platform android -> dist-native/
 ```
