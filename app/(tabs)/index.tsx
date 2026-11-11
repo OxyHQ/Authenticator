@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from '@oxy.so/bloom/button';
 import { P } from '@oxy.so/bloom/typography';
 import { router, useFocusEffect } from 'expo-router';
@@ -8,12 +7,7 @@ import { ScrollView, View } from 'react-native';
 
 import OTPCode from '../../components/OTPCode';
 import SafeAreaHeader from '../../components/SafeAreaHeader';
-
-interface Account {
-  secret: string;
-  issuer: string;
-  account: string;
-}
+import { type Account, getAccounts } from '../../lib/accounts';
 
 export default function AccountsScreen() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -21,10 +15,7 @@ export default function AccountsScreen() {
 
   const loadAccounts = useCallback(async () => {
     try {
-      const storedAccounts = await AsyncStorage.getItem('accounts');
-      if (storedAccounts) {
-        setAccounts(JSON.parse(storedAccounts));
-      }
+      setAccounts(await getAccounts());
     } catch (error) {
       console.error('Error loading accounts:', error);
     }

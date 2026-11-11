@@ -22,7 +22,8 @@ mock.module('@react-native-async-storage/async-storage', () => ({
     },
   },
 }));
-mock.module('react-native', () => ({ View: 'view' }));
+mock.module('expo-secure-store', () => ({}));
+mock.module('react-native', () => ({ Platform: { OS: 'web' }, View: 'view' }));
 mock.module('@oxy.so/bloom/button', () => ({ Button: 'button' }));
 mock.module('@oxy.so/bloom/typography', () => ({ P: 'text', Text: 'text' }));
 mock.module('@oxy.so/bloom/theme', () => ({ useBloomTheme: () => ({ theme: { colors: {} } }) }));
@@ -49,7 +50,8 @@ const token = (id: string) =>
   `e30.${Buffer.from(JSON.stringify({ userId: id, sessionId: id, exp: 2_000_000_000 })).toString('base64url')}.sig`;
 oxy.session.setAccessToken(token('A'));
 let cloudWrites = 0;
-oxy.appData.get = async () => cloud as never;
+let remote: unknown;
+oxy.appData.get = async () => remote as never;
 oxy.appData.set = async <T,>(_namespace: string, _key: string, value: T) => {
   cloudWrites++;
   return value;
@@ -63,6 +65,9 @@ mock.module('@oxy.so/services/ui/client', () => ({
   }),
 }));
 const { default: SyncScreen } = await import('../../app/(tabs)/sync');
+const { sealAccounts } = await import('../../lib/accounts');
+remote = await sealAccounts(cloud);
+writes = 0;
 const realError = console.error;
 const errors: unknown[][] = [];
 console.error = (...args: unknown[]) => {

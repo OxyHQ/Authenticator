@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from '@oxy.so/bloom/button';
 import { RiCameraLine } from '@oxy.so/bloom/icons/RiCameraLine';
 import { RiQrCodeLine } from '@oxy.so/bloom/icons/RiQrCodeLine';
@@ -11,6 +10,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { addAccount } from '../../lib/accounts';
 
 /** Vertical travel of the scan line, in dp, measured from the frame centre. */
 const SCAN_LINE_TRAVEL = 120;
@@ -82,10 +83,7 @@ export default function ScanScreen() {
         return;
       }
 
-      const existingAccounts = await AsyncStorage.getItem('accounts');
-      const accounts = existingAccounts ? JSON.parse(existingAccounts) : [];
-      accounts.push({ secret, issuer, account });
-      await AsyncStorage.setItem('accounts', JSON.stringify(accounts));
+      await addAccount({ secret, issuer, account });
       router.replace('/');
     } catch (error) {
       console.error('Error processing QR code:', error);

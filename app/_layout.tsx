@@ -4,7 +4,6 @@
 // instead of falling through to react-native-web's base View reset. Pairs with
 // postcss.config.mjs.
 import '../global.css';
-import '../i18n';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BloomProvider } from '@oxy.so/bloom/provider';
@@ -14,6 +13,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import i18n, { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '@/i18n';
 import { API_URL, BRAND_SEED, OXY_CLIENT_ID, THEME_PERSIST_KEY } from '@/lib/config';
 
 /** Wears the signed-in account's Oxy colour; must sit below both providers. */
@@ -40,7 +40,19 @@ export default function RootLayout() {
               client and the Bloom surface / dialog / toast hosts, and never
               redirects to an external login page. Interactive sign-in is the
               in-app account dialog. */}
-          <OxyProvider baseURL={API_URL} clientId={OXY_CLIENT_ID}>
+          <OxyProvider
+            baseURL={API_URL}
+            clientId={OXY_CLIENT_ID}
+            language={{
+              supportedLocales: SUPPORTED_LANGUAGES,
+              fallbackLocale: DEFAULT_LANGUAGE,
+              onChange: async (locale) => {
+                await i18n.changeLanguage(locale);
+              },
+              onError: (error, locale) =>
+                console.error(`Failed to switch the language to ${locale}:`, error),
+            }}
+          >
             <AccountColor />
             <Stack screenOptions={{ headerShown: false }} />
             <StatusBar style="auto" />

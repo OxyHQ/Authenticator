@@ -14,7 +14,7 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
-    "test": "bun test utils",
+    "test": "bun test utils lib",
     "doctor:oxy": "oxy-doctor --ci"
   },
   "dependencies": {
