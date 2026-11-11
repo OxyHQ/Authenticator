@@ -2,14 +2,6 @@
 
 A TOTP (RFC 6238) two-factor authentication app: Expo Router on iOS, Android and web, wired to the Oxy platform SDK for sign-in and cross-device sync.
 
-```
-app/            expo-router routes: (tabs)/{index,scan,sync,settings}
-components/     OTPCode (the code card), SafeAreaHeader
-utils/totp.ts   the TOTP generator: base32 decode, SHA-1, HMAC-SHA1, truncation
-lib/config.ts   env-backed runtime config (API URL, Oxy client id, brand seed)
-i18n/           bundled English + Spanish resources; the language is the one Oxy resolves (`OxyProvider`'s `language` prop, ADR 0022), there is no in-app toggle
-```
-
 ## Commands
 
 ```bash
@@ -19,164 +11,59 @@ bun run web            # Expo dev server, web
 bun run typecheck      # tsc --noEmit
 bun run lint           # biome check . && expo lint .
 bun run lint:fix       # biome check --write .
-bun run format         # biome format --write .
 bun run test           # bun test: RFC 6238 vectors, cloud sync, secure-storage migration
 bun run doctor:oxy     # oxy-doctor --ci: duplicate copies, Oxy releases, services' native peers
 bun run export:web     # expo export --platform web -> dist/
 bun run export:native  # expo export --platform android -> dist-native/
 ```
 
-## Rules specific to this repository
+## Map
 
-**`utils/totp.ts` is security critical and is not refactored opportunistically.** It holds the hand written base32 decoder, SHA-1, HMAC-SHA1 and dynamic truncation that produce every code the app shows. `utils/__tests__/totp.test.ts` pins it against the RFC 6238 test vectors; any change to that file must keep those green, and a change that cannot be expressed without moving them needs its own pull request and its own review.
+- `app/` expo-router routes; `components/` shared UI; `i18n/` English and Spanish resources.
+- `utils/totp.ts` the TOTP generator; `lib/accounts.ts` the only reader and writer of stored accounts; `lib/config.ts` env-backed runtime config.
+- `app/_layout.tsx` is the single provider tree.
+- Language is whatever Oxy resolves (`OxyProvider` `language` prop); there is no in-app toggle.
 
-**Secrets on device.** Accounts are an array of `{ secret, issuer, account }` under the `accounts` key, and `lib/accounts.ts` is the only code that reads or writes them (screens never touch storage for accounts). Native keeps them in the OS keychain/Keystore via expo-secure-store; web has no keychain and keeps using AsyncStorage (`localStorage`). Builds before this one stored them in plain AsyncStorage on native, so the module moves them to secure storage on first read (write, read back, then delete the old copy) and retries on failure. Do not rename the key or reshape the value without a migration, and never log an account.
+## Conventions that differ from defaults
 
-**Cloud sync writes through the SDK, never a raw HTTP client.** `oxyServices.appData.set` / `appData.get` under the `authenticator` namespace. No app local axios instance, no manual `Authorization` header, no bespoke endpoint. What is uploaded is never plaintext: `lib/accounts.ts` seals the account list with XChaCha20-Poly1305 (`@oxy.so/core/crypto`) under a random device-held key in secure storage. The SDK offers this app no account-derived key, so a backup opens only on the device that made it; cross-device restore is not possible until the SDK provides one. Plaintext backups from older builds are merged into the local list and replaced by the sealed form when the sync screen opens.
+Full rationale for each is in [docs/agent-rules.md](docs/agent-rules.md).
 
-**One provider tree.** `BloomProvider` (theme) wraps `OxyProvider` (session, query client, Bloom surface/dialog/toast hosts) in `app/_layout.tsx`. `OxyProvider` already mounts `SafeAreaProvider`, `GestureHandlerRootView`, the keyboard provider, the toast outlet and the dialog provider, so screens must not mount second copies. Interactive sign in is `useOxy().openAccountDialog()`, and the app never navigates to an IdP.
+- Account storage goes through `lib/accounts.ts` only. Native uses expo-secure-store, web uses AsyncStorage. Do not rename the `accounts` key or reshape its value without a migration, and never log an account. Why: the data is the second factor itself.
+- Cloud sync uses `oxyServices.appData.get/set` under the `authenticator` namespace, never a raw HTTP client, and uploads only the sealed (XChaCha20-Poly1305) list. Why: the SDK owns auth, and plaintext secrets must never leave the device.
+- One provider tree: `BloomProvider` wraps `OxyProvider` in `app/_layout.tsx`. Do not mount a second `SafeAreaProvider`, gesture root, keyboard, toast or dialog provider. Sign-in is `useOxy().openAccountDialog()`.
+- Expo, Metro, Babel and tsconfig come from `@oxy.so/app-preset`; change the preset, not local copies. `app.config.js` uses only `plugin/withOxyBuildProperties`, never the full preset plugin (it adds signing-key permissions this app stays out of).
+- Keep `overrides.lightningcss` in `package.json`. Why: native bundles break while the web build stays green; after touching it run `rm -rf node_modules && bun install` and `bun run export:native`.
+- Lint is Biome plus a minimal ESLint for three `expo/*` env-var rules; run `expo lint .`, never bare `expo lint`. Do not add Prettier or more ESLint rules.
+- Style with NativeWind classes on Bloom role tokens (`bg-background`, `text-foreground`, ...); no hardcoded hex. `useBloomTheme()` only where a class cannot apply.
+- Use `alert()` from `@oxy.so/bloom/surfaces`, not React Native `Alert`. Why: `Alert` is a no-op on web.
+- Package manager is bun (`bunx`, not `npx`); commit `bun.lock` with the `package.json` change that caused it.
+- General code, TypeScript, React and error-handling standards: [Oxy engineering standards](https://github.com/OxyHQ/oxy/blob/main/docs/engineering/standards.md).
 
-**Native and Expo config comes from `@oxy.so/app-preset`,** not from files in this repo: `metro.config.js` and `babel.config.js` are one line each and `tsconfig.json` extends the preset. Change the preset rather than inlining config here. `app.config.js` applies only the preset's `plugin/withOxyBuildProperties`, never the full `@oxy.so/app-preset` plugin: that one always adds the Oxy signature permissions (which require the shared ecosystem signing key) and the iOS shared keychain group, and Authenticator deliberately stays out of both. Read the comment there before changing it.
+## Boundaries
 
-**`overrides.lightningcss` is load-bearing. Do not remove it, and do not assume a green web build means the app bundles.** react-native-css compiles `global.css` through lightningcss for NATIVE, while the web build goes through the PostCSS/Tailwind pipeline instead, so the two exercise different code. `@expo/metro-config` carries its own nested lightningcss, and when that copy resolved to 1.32.0 every native bundle died with `SyntaxError: global.css: failed to deserialize; expected an object-like struct named Specifier, found ()` while `expo export --platform web` stayed perfectly green. Two details make this hard to rediscover: pinning `lightningcss` as a direct dependency is NOT enough, because it does not reach the nested copy, and adding the override to `package.json` is not enough either, because bun does not re-apply a root override to an already-resolved nested dependency on an incremental install. It takes the override plus `rm -rf node_modules && bun install`. `bun run export:native` runs in CI for exactly this reason; keep it there.
+- Never refactor `utils/totp.ts` opportunistically; a change that must move the RFC 6238 vectors in `utils/__tests__/totp.test.ts` needs its own PR and review.
+- Never commit secrets or `.env`; `EXPO_PUBLIC_*` values are inlined into the client bundle and are public.
+- Ask first before changing the stored account shape, the sync payload format, or the preset wiring.
 
-**Formatting and linting are Biome** (`biome.json`, Biome 2.5.15). `eslint.config.js` no longer delegates to the preset: it is a minimal config holding only `expo/no-env-var-destructuring`, `expo/no-dynamic-env-var` and `expo/use-dom-exports`, which Biome has no equivalent for (Metro silently fails to inline a destructured or computed `EXPO_PUBLIC_*` read). Run it as `expo lint .`, never bare `expo lint`, which only covers `app/`, `components/` and `src/` and so misses `lib/config.ts`, where every `EXPO_PUBLIC_*` read lives. Do not add Prettier or other ESLint rules back.
+## Testing
 
-**Theming is Bloom, seeded from the app's own blue** (`BRAND_SEED` in `lib/config.ts`). Use NativeWind classes against Bloom's role tokens (`bg-background`, `bg-card`, `text-foreground`, `text-muted-foreground`, `border-border`, `text-primary`). Reach for `useBloomTheme().theme.colors` only where a class cannot apply: navigator chrome, SVG `fill`, a computed dimension. Never hardcode a hex in a component.
+- Any change: `bun run typecheck`, `bun run lint`, `bun run test`.
+- Dependency, CSS or config changes: also `bun run export:native` and `bun run export:web`.
+- Account, scan, sync or storage changes: exercise manually on a device (no accounts, camera denied, invalid QR, no network).
+- Done means CI (`.github/workflows/ci.yml`) is green.
 
-**Alerts are `alert()` from `@oxy.so/bloom/surfaces`,** not React Native's `Alert`, which is a no-op on web and this app ships to web.
+## Pull requests and commits
 
----
+- Imperative commit messages that say why; one logical change per commit; PR titles under 70 characters; PR bodies say what, why and how it was tested.
+- Never force-push a shared branch; scope `git add` to the paths you touched.
 
-# Oxy engineering standards
+## Secrets
 
-How we write code at Oxy. Copy this file into a repository root and every AI coding agent that reads `AGENTS.md` picks it up, as does every human who opens it.
+The app needs none to run: `.env.example` lists only public `EXPO_PUBLIC_*` values. Never print or commit credentials.
 
-## Package manager
+## Links
 
-Always **bun**, never npm or yarn. Use `bunx` instead of `npx`.
+- [docs/agent-rules.md](docs/agent-rules.md), [CONTRIBUTING.md](CONTRIBUTING.md), [README.md](README.md)
+- [Lint and format](https://github.com/OxyHQ/oxy/blob/main/docs/engineering/lint-and-format.md), [npm releases](https://github.com/OxyHQ/oxy/blob/main/docs/npm-releases.md), [Bloom app conventions](https://github.com/OxyHQ/Bloom/blob/main/docs/app-conventions.mdx)
 
-Commit `bun.lock` in the **same commit** as the `package.json` change that caused it. A version bump without its lockfile fails CI with `lockfile had changes, but lockfile is frozen`, and the person who lands next inherits the breakage.
-
-## Code quality
-
-Write straightforward code that another engineer can read at 2am. No clever tricks, no cute solutions. Clarity beats brevity: if the longer version is easier to debug, write the longer version.
-
-- Follow the patterns already in the codebase. Consistency beats personal preference.
-- No unnecessary abstractions, and no half finished ones either.
-- No helper files, helper functions, or single use `const` aliases for trivial expressions. Use a named constant when it is reused, required for hook dependencies, or when it marks a real domain boundary.
-- No re-exports, no barrel file tricks, no compatibility shims. Import from the package that owns the thing.
-- No `@deprecated` markers and no backward compatible aliases. A rename is a clean cut: remove the old identifier, update every call site including comments, ship it.
-- Never leave `TODO`, `FIXME` or `HACK` comments. Fix it now or do not write the comment.
-
-### Naming
-
-| Kind | Convention |
-|---|---|
-| Variables, functions | `camelCase` |
-| Types, interfaces, classes | `PascalCase` |
-| Constants | `UPPER_SNAKE_CASE` |
-| Utility files | `kebab-case` |
-| React components | `PascalCase` |
-| Booleans | `is`, `has`, `should`, `can` prefix |
-| Event handlers | `handle` prefix |
-
-No single letter names outside loop indices. No abbreviations unless universally understood.
-
-### TypeScript
-
-- Never `as any`. Never `@ts-ignore` or `@ts-expect-error`. Fix the actual type error, and define the interface if the type is complex.
-- Never `any` as a parameter or return type.
-- Never `!` non null assertions. Handle the null with optional chaining or a guard.
-- Prefer `unknown` over `any` when the type is genuinely unknown, then narrow with a type guard.
-- Strict mode, always. No implicit `any`, no unchecked index access.
-- Never `var`. `const` by default, `let` only when reassignment is real.
-
-### React
-
-Effects synchronise with external systems. They are not for transforming data or responding to events.
-
-| Instead of | Do this |
-|---|---|
-| `useEffect` + `setState` for derived state | Calculate it during render |
-| `useEffect` for expensive computation | `useMemo` |
-| `useEffect` to reset state on a prop change | `key` on the component |
-| `useEffect` watching state to react to an event | Put the logic in the event handler |
-| Chained effects | One calculation, or the event handler |
-| `useEffect` + `addEventListener` for a store | `useSyncExternalStore` |
-| Raw `useEffect` fetching | React Query or SWR |
-
-If you do fetch in an Effect, use a cleanup function with an `ignore` flag or you will ship a race condition. Guard app initialisation with a module level flag: Effects run twice in StrictMode.
-
-**React Compiler and external mutable state.** With the compiler enabled, never read external mutable state inside a memoised position (`useMemo`, or any value the compiler auto memoises). That includes SQLite reads, module level mutable singletons, a ref's `.current`, and any out of band store read. The compiler assumes purity, freezes the first value it computes, and serves it forever. Fix it with `useSyncExternalStore` whose snapshot returns a stable reference while unchanged, or hold the data in reactive state. `'use no memo'` is a band aid, and disabling the compiler globally to dodge this is not a fix.
-
-### Styling
-
-In React Native, never write inline styles where a NativeWind class exists for the same thing.
-
-### Error handling
-
-- Handle errors at system boundaries: user input, API responses, third party services. Trust internal code and framework guarantees.
-- Never swallow an error silently. `catch {}` is not error handling. Log with enough context to know what failed and on what input.
-- Typed error responses from APIs. No unstructured error strings.
-- Never `console.log` for debugging in committed code.
-
-### Security
-
-- Never commit secrets, tokens or credentials, and never paste them into config files, docs or issue threads. Environment variables, always.
-- Validate and sanitise every external input. Guard against SQL injection, XSS and command injection.
-- Parameterised queries for every database operation.
-- Least privilege for every API key and service account.
-- Never build a mass assignment path: no `new Model(req.body)`, no spreading `req.body` into an update. Resolve the owner server side and whitelist fields explicitly.
-
-### Testing
-
-- Test business logic, API endpoints and complex utilities.
-- Test behaviour, not implementation. A refactor should not break the suite.
-- Descriptive test names: the scenario and the expected outcome.
-- No test only hooks in production code. If something is hard to test, the design is the problem.
-- A check that cannot fail is worse than no check. Before trusting a test, break the thing it guards and confirm it goes red.
-
-## Verification
-
-Claiming something works is not the same as knowing it does.
-
-- Trace the real path before fixing: which request the client actually makes, which route serves it, what that handler actually returns. Then fix, then re-check against the original symptom.
-- Type checking and unit tests do not catch render races, layout bugs, animation freezes or navigation problems. Verify those in a real, foregrounded browser or a real device build.
-- After changing anything, read the logs and the error output. Review your own work before reporting success.
-- Never claim a feature is complete without auditing the integration points between the new code and the old. If there are gaps, list them.
-
-## Git and pull requests
-
-- Commit messages in the imperative, focused on why rather than what. `Fix race condition in session refresh`, not `Updated auth.ts`.
-- One logical change per commit. Do not mix unrelated work.
-- PR titles under 70 characters. PR bodies say what changed, why, and how it was tested.
-- Never force push a shared branch. Rebase only your own.
-- Delete branches after merge.
-- In a shared repository, scope your `git add` to the paths you touched. Never `git add -A` where another session may have uncommitted work.
-
-## When an approach fails
-
-If the first approach does not work, or gets rejected, stop and ask which direction to take. Do not cascade through three progressively hackier workarounds. The second wrong approach costs more than the question.
-
-## Environment configuration
-
-- Every value that varies between environments comes from an environment variable. Nothing hardcoded, no magic numbers, no hardcoded URLs or API keys.
-- Commit a `.env.example` documenting the required variables, with no real values.
-- Never commit `.env`. Make sure `.gitignore` covers it.
-
-## How this file is used
-
-`AGENTS.md` is the single source of truth, and it is vendor neutral: Claude Code, Codex, Cursor, Copilot and others read it directly.
-
-For Claude Code, add a `CLAUDE.md` next to it whose only meaningful line is:
-
-```
-@AGENTS.md
-```
-
-Never put real content in `CLAUDE.md`, and never let the two drift apart.
-
-Agents load `AGENTS.md` from the repository root down to the working directory and stack them, so a file deeper in the tree carries **only its own delta**. Never copy a parent's rules into a child: duplication is what makes an agent follow the stale copy.
-
-Keep version numbers, changelogs and "fixed in commit X" stories out of these files. `package.json` is the truth for versions and git is the truth for history.
+Owner: Nate Isern (OxyHQ). Last reviewed: 2026-11-11.
