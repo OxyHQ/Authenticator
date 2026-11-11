@@ -22,7 +22,8 @@ mock.module('@react-native-async-storage/async-storage', () => ({
     },
   },
 }));
-mock.module('react-native', () => ({ View: 'view' }));
+mock.module('expo-secure-store', () => ({}));
+mock.module('react-native', () => ({ Platform: { OS: 'web' }, View: 'view' }));
 mock.module('@oxy.so/bloom/button', () => ({ Button: 'button' }));
 mock.module('@oxy.so/bloom/typography', () => ({ P: 'text', Text: 'text' }));
 mock.module('@oxy.so/bloom/theme', () => ({ useBloomTheme: () => ({ theme: { colors: {} } }) }));

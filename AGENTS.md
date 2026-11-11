@@ -7,7 +7,7 @@ app/            expo-router routes: (tabs)/{index,scan,sync,settings}
 components/     OTPCode (the code card), SafeAreaHeader
 utils/totp.ts   the TOTP generator: base32 decode, SHA-1, HMAC-SHA1, truncation
 lib/config.ts   env-backed runtime config (API URL, Oxy client id, brand seed)
-i18n/           bundled English + Spanish resources
+i18n/           bundled English + Spanish resources; the language is the one Oxy resolves (`OxyProvider`'s `language` prop, ADR 0022), there is no in-app toggle
 ```
 
 ## Commands
@@ -20,7 +20,7 @@ bun run typecheck      # tsc --noEmit
 bun run lint           # biome check . && expo lint .
 bun run lint:fix       # biome check --write .
 bun run format         # biome format --write .
-bun run test           # bun test, RFC 6238 vectors for the TOTP generator
+bun run test           # bun test: RFC 6238 vectors, cloud sync, secure-storage migration
 bun run doctor:oxy     # oxy-doctor --ci: duplicate copies, Oxy releases, services' native peers
 bun run export:web     # expo export --platform web -> dist/
 bun run export:native  # expo export --platform android -> dist-native/
@@ -30,7 +30,7 @@ bun run export:native  # expo export --platform android -> dist-native/
 
 **`utils/totp.ts` is security critical and is not refactored opportunistically.** It holds the hand written base32 decoder, SHA-1, HMAC-SHA1 and dynamic truncation that produce every code the app shows. `utils/__tests__/totp.test.ts` pins it against the RFC 6238 test vectors; any change to that file must keep those green, and a change that cannot be expressed without moving them needs its own pull request and its own review.
 
-**Secrets on device.** Accounts live in `AsyncStorage` under the `accounts` key as an array of `{ secret, issuer, account }`. The storage key and the stored shape are a compatibility surface: an installed app upgrading in place must still find its accounts, so do not rename the key or reshape the value without a migration.
+**Secrets on device.** Accounts are an array of `{ secret, issuer, account }` under the `accounts` key, and `lib/accounts.ts` is the only code that reads or writes them (screens never touch storage for accounts). Native keeps them in the OS keychain/Keystore via expo-secure-store; web has no keychain and keeps using AsyncStorage (`localStorage`). Builds before this one stored them in plain AsyncStorage on native, so the module moves them to secure storage on first read (write, read back, then delete the old copy) and retries on failure. Do not rename the key or reshape the value without a migration, and never log an account.
 
 **Cloud sync writes through the SDK, never a raw HTTP client.** `oxyServices.appData.set` / `appData.get` under the `authenticator` namespace. No app local axios instance, no manual `Authorization` header, no bespoke endpoint.
 

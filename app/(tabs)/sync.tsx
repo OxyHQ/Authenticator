@@ -14,12 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import SafeAreaHeader from '../../components/SafeAreaHeader';
-
-interface Account {
-  secret: string;
-  issuer: string;
-  account: string;
-}
+import { type Account, getAccounts, saveAccounts } from '../../lib/accounts';
 
 /**
  * Where cloud sync stores this app's account list.
@@ -46,10 +41,7 @@ export default function SyncScreen() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const storedAccounts = await AsyncStorage.getItem('accounts');
-        if (storedAccounts) {
-          setAccounts(JSON.parse(storedAccounts));
-        }
+        setAccounts(await getAccounts());
 
         const lastSyncTime = await AsyncStorage.getItem('lastSyncTime');
         if (lastSyncTime) {
@@ -72,7 +64,7 @@ export default function SyncScreen() {
   const markSynced = async (epoch: number, nextAccounts?: Account[]) => {
     assertCurrentSession(epoch);
     if (nextAccounts) {
-      await AsyncStorage.setItem('accounts', JSON.stringify(nextAccounts));
+      await saveAccounts(nextAccounts);
       assertCurrentSession(epoch);
       setAccounts(nextAccounts);
     }
@@ -93,8 +85,7 @@ export default function SyncScreen() {
     const epoch = oxyServices.http.getSessionEpoch();
     setSyncStatus('syncing');
     try {
-      const storedAccounts = await AsyncStorage.getItem('accounts');
-      const localAccounts: Account[] = storedAccounts ? JSON.parse(storedAccounts) : [];
+      const localAccounts = await getAccounts();
 
       assertCurrentSession(epoch);
       await oxyServices.appData.set(APP_DATA_NAMESPACE, APP_DATA_KEY, localAccounts);

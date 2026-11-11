@@ -1,6 +1,9 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
+export const DEFAULT_LANGUAGE = 'en';
+export const SUPPORTED_LANGUAGES = ['en', 'es'] as const;
+
 const resources = {
   en: {
     translation: {
@@ -20,7 +23,6 @@ const resources = {
       addAccount: 'Add Account',
       signIn: 'Sign In',
       darkMode: 'Dark Mode',
-      language: 'Language',
       codeCopied: 'Code copied',
       copyCodeFor: 'Copy the code for {{issuer}} {{account}}',
       notFoundTitle: "This screen doesn't exist.",
@@ -78,7 +80,6 @@ const resources = {
       addAccount: 'Agregar cuenta',
       signIn: 'Iniciar Sesión',
       darkMode: 'Modo oscuro',
-      language: 'Idioma',
       codeCopied: 'Código copiado',
       copyCodeFor: 'Copiar el código de {{issuer}} {{account}}',
       notFoundTitle: 'Esta pantalla no existe.',
@@ -123,8 +124,8 @@ const resources = {
 
 i18n.use(initReactI18next).init({
   resources,
-  lng: 'en',
-  fallbackLng: 'en',
+  lng: DEFAULT_LANGUAGE,
+  fallbackLng: DEFAULT_LANGUAGE,
   interpolation: {
     escapeValue: false,
   },
