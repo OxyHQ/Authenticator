@@ -14,7 +14,14 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import SafeAreaHeader from '../../components/SafeAreaHeader';
-import { type Account, getAccounts, saveAccounts } from '../../lib/accounts';
+import {
+  type Account,
+  dedupeAccounts,
+  getAccounts,
+  openCloudAccounts,
+  saveAccounts,
+  sealAccounts,
+} from '../../lib/accounts';
 
 /**
  * Where cloud sync stores this app's account list.
@@ -76,6 +83,32 @@ export default function SyncScreen() {
     setSyncStatus('success');
   };
 
+  const uploadSealed = async (epoch: number, toUpload: Account[]) => {
+    assertCurrentSession(epoch);
+    await oxyServices.appData.set(APP_DATA_NAMESPACE, APP_DATA_KEY, await sealAccounts(toUpload));
+  };
+
+  // A backup an older build left on the server holds plaintext secrets. When the
+  // person is signed in, merge it into the local accounts and put the sealed
+  // form in its place, so nothing is lost and no plaintext stays remote.
+  useEffect(() => {
+    if (!user || !canUsePrivateApi) return;
+    const epoch = oxyServices.http.getSessionEpoch();
+    const sameSession = () => oxyServices.http.getSessionEpoch() === epoch;
+    (async () => {
+      const stored = await oxyServices.appData.get<unknown>(APP_DATA_NAMESPACE, APP_DATA_KEY);
+      if (!sameSession() || !Array.isArray(stored) || stored.length === 0) return;
+      const remote = (await openCloudAccounts(stored)).accounts;
+      const merged = dedupeAccounts([...(await getAccounts()), ...remote]);
+      if (!sameSession()) return;
+      await saveAccounts(merged);
+      await oxyServices.appData.set(APP_DATA_NAMESPACE, APP_DATA_KEY, await sealAccounts(merged));
+      setAccounts(merged);
+    })().catch((error: unknown) => {
+      console.error('Error sealing the cloud backup:', error);
+    });
+  }, [user, canUsePrivateApi, oxyServices]);
+
   const syncToCloud = async () => {
     if (!user) {
       openAccountDialog();
@@ -88,7 +121,11 @@ export default function SyncScreen() {
       const localAccounts = await getAccounts();
 
       assertCurrentSession(epoch);
-      await oxyServices.appData.set(APP_DATA_NAMESPACE, APP_DATA_KEY, localAccounts);
+      await oxyServices.appData.set(
+        APP_DATA_NAMESPACE,
+        APP_DATA_KEY,
+        await sealAccounts(localAccounts),
+      );
       await markSynced(epoch);
 
       alert(t('syncSuccessTitle'), t('syncSuccessMessage'));
@@ -108,20 +145,20 @@ export default function SyncScreen() {
     const epoch = oxyServices.http.getSessionEpoch();
     setSyncStatus('syncing');
     try {
-      const cloudAccounts = await oxyServices.appData.get<Account[]>(
-        APP_DATA_NAMESPACE,
-        APP_DATA_KEY,
-      );
+      const stored = await oxyServices.appData.get<unknown>(APP_DATA_NAMESPACE, APP_DATA_KEY);
 
       assertCurrentSession(epoch);
-      if (!cloudAccounts || cloudAccounts.length === 0) {
+      if (!stored || (Array.isArray(stored) && stored.length === 0)) {
         setSyncStatus('idle');
         alert(t('noCloudDataTitle'), t('noCloudDataMessage'));
         return;
       }
+      const { accounts: cloudAccounts, legacy } = await openCloudAccounts(stored);
 
       const applyCloudAccounts = async () => {
         await markSynced(epoch, cloudAccounts);
+        // A plaintext backup from an older build is replaced by the sealed form.
+        if (legacy) await uploadSealed(epoch, cloudAccounts);
         alert(t('retrieveSuccessTitle'), t('retrieveSuccessMessage'));
       };
 

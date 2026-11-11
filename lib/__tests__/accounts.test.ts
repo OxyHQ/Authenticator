@@ -48,3 +48,26 @@ test('new accounts are written to secure storage only', async () => {
   expect(plain.has('accounts')).toBe(false);
   expect(await getAccounts()).toEqual([{ secret: 'BBBB', issuer: 'New', account: 'b' }]);
 });
+
+test('cloud backups are sealed on the device, plaintext ones are flagged, wrong keys fail', async () => {
+  const { dedupeAccounts, isValidSecret, openCloudAccounts, sealAccounts } = await import(
+    '../accounts'
+  );
+  const sealed = await sealAccounts([...legacy, ...legacy]);
+  expect(JSON.stringify(sealed)).not.toContain('AAAA');
+  expect(await openCloudAccounts(sealed)).toEqual({ accounts: legacy, legacy: false });
+  expect(await openCloudAccounts(legacy)).toEqual({ accounts: legacy, legacy: true });
+
+  secure.set('accounts-sync-key', Buffer.alloc(32, 1).toString('base64'));
+  await expect(openCloudAccounts(sealed)).rejects.toThrow();
+
+  expect(isValidSecret('jbsw y3dp=')).toBe(true);
+  expect(isValidSecret('not base32!')).toBe(false);
+  expect(dedupeAccounts([legacy[0], { ...legacy[0], secret: 'aaaa' }])).toHaveLength(1);
+});
+
+test('a scanned secret that is not base32 is rejected', async () => {
+  await expect(addAccount({ secret: '8!', issuer: 'x', account: 'y' })).rejects.toThrow();
+  expect(plain.has('accounts')).toBe(false);
+  expect(secure.has('accounts')).toBe(false);
+});
