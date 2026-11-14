@@ -30,6 +30,7 @@ Full rationale for each is in [docs/agent-rules.md](docs/agent-rules.md).
 
 - Account storage goes through `lib/accounts.ts` only. Native uses expo-secure-store, web uses AsyncStorage. Do not rename the `accounts` key or reshape its value without a migration, and never log an account. Why: the data is the second factor itself.
 - Cloud sync uses `oxyServices.appData.get/set` under the `authenticator` namespace, never a raw HTTP client, and uploads only the sealed (XChaCha20-Poly1305) list. Why: the SDK owns auth, and plaintext secrets must never leave the device.
+- First-party never asks people for permissions: this app acts for a person with `actingFor` on what oxy's first-party registry declares (oxy ADR 0066); permissions, scopes and consent are only for third parties.
 - One provider tree: `BloomProvider` wraps `OxyProvider` in `app/_layout.tsx`. Do not mount a second `SafeAreaProvider`, gesture root, keyboard, toast or dialog provider. Sign-in is `useOxy().openAccountDialog()`.
 - Expo, Metro, Babel and tsconfig come from `@oxy.so/app-preset`; change the preset, not local copies. `app.config.js` uses only `plugin/withOxyBuildProperties`, never the full preset plugin (it adds signing-key permissions this app stays out of).
 - Keep `overrides.lightningcss` in `package.json`. Why: native bundles break while the web build stays green; after touching it run `rm -rf node_modules && bun install` and `bun run export:native`.
