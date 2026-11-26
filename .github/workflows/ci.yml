@@ -210,7 +210,8 @@ jobs:
   # OxyHQ/Bloom's: green only when every job above passed, so a cancelled or
   # skipped job can never read as a pass. Required checks by job name cannot
   # follow the Seldon race (a twin and a rescue share their job's name, and a
-  # cancelled loser is not a failure); this one can. The only skips it allows
+  # cancelled loser is not a failure); this one can, and it is the one check
+  # the `main: protect` ruleset (24913169) requires. The only skips it allows
   # are the race's jobs, twin and rescue when they are not needed. When the
   # race or the rescue ran, `quality` passes on the race's verdict: its name
   # passed in some lane and failed in no hosted lane.
