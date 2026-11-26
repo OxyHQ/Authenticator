@@ -157,7 +157,7 @@ jobs:
 
   # quality's hosted twin in the Seldon race: the same name and steps.
   quality-hosted:
-    name: Typecheck, lint, test and build
+    name: ${{ vars.CI_SELDON_RACE == 'true' && 'Typecheck, lint, test and build' || 'Typecheck, lint, test and build (Seldon twin, idle)' }}
     needs: race
     if: ${{ !cancelled() && needs.race.outputs.race == 'true' }}
     runs-on: ubuntu-latest
@@ -170,7 +170,7 @@ jobs:
   # quality's rescue: reruns it hosted when its Seldon lane failed (the house
   # network drops connections); a genuine failure fails again.
   quality-rescue:
-    name: Typecheck, lint, test and build
+    name: ${{ vars.CI_SELDON_RACE == 'true' && 'Typecheck, lint, test and build' || 'Typecheck, lint, test and build (Seldon rescue, idle)' }}
     needs: quality
     if: ${{ !cancelled() && needs.quality.result == 'failure' && vars.CI_SELDON_RACE == 'true' && github.run_attempt == 1 && (github.event_name == 'pull_request' || github.event_name == 'merge_group') && !github.event.pull_request.head.repo.fork }}
     runs-on: ubuntu-latest
